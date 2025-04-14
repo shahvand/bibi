@@ -1,5 +1,8 @@
 from django import template
 from decimal import Decimal
+import locale
+import re
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -31,31 +34,34 @@ def clean_number(value):
 
 @register.filter
 def format_price(value):
-    """حذف اعشار و صفرهای اضافی از قیمت و اضافه کردن تومان در انتها"""
+    """
+    Format a price value by:
+    1. Removing decimal places if they're all zeros
+    2. Adding thousands separator
+    3. Adding ' تومان' suffix to the end
+    
+    If the value is None, return a dash.
+    """
     if value is None:
-        return ""
+        return "-"
     
     try:
-        # تبدیل به Decimal برای اطمینان
-        decimal_value = Decimal(str(value))
-        
-        # اگر عدد صحیح است، فقط بخش صحیح را برگردان با فرمت هزارگان
-        if decimal_value == decimal_value.to_integral_value():
-            formatted_value = "{:,}".format(int(decimal_value))
-            return f"{formatted_value} تومان"
-        
-        # در غیر این صورت، عدد اعشاری را برگردان، با حذف صفرهای انتهایی و فرمت هزارگان
-        cleaned_value = str(decimal_value).rstrip('0').rstrip('.') if '.' in str(decimal_value) else str(decimal_value)
-        
-        if '.' in cleaned_value:
-            integer_part, decimal_part = cleaned_value.split('.')
-            formatted_value = "{:,}.{}".format(int(integer_part), decimal_part)
-        else:
-            formatted_value = "{:,}".format(int(cleaned_value))
-            
-        return f"{formatted_value} تومان"
-    except:
-        return value
+        value = Decimal(str(value))
+    except (ValueError, TypeError):
+        return f"{value} تومان"
+
+    # Format with thousands separator
+    locale.setlocale(locale.LC_ALL, '')
+    formatted_value = locale.format_string("%d", int(value), grouping=True)
+    
+    # Check if there are non-zero decimal places
+    decimal_part = value % 1
+    if decimal_part > 0:
+        decimal_str = str(decimal_part).split('.')[1]
+        formatted_value = f"{formatted_value}.{decimal_str}"
+    
+    # Add تومان suffix
+    return f"{formatted_value} تومان"
 
 def format_price_input(value):
     """تابع کمکی برای فرمت کردن قیمت‌ها در فرم‌ها"""

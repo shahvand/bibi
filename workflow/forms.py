@@ -11,12 +11,15 @@ class UserRegisterForm(UserCreationForm):
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['title', 'code', 'description', 'price_per_unit', 'current_stock', 'min_stock', 'unit']
+        fields = ['title', 'code', 'description', 'price_per_unit', 'current_stock', 'min_stock', 'unit_ref']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'code': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'rows': 3}),
+            'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
             'price_per_unit': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+            'current_stock': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+            'min_stock': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+            'unit_ref': forms.Select(attrs={'class': 'form-select'}),
         }
     
     def __init__(self, *args, **kwargs):

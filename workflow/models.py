@@ -36,27 +36,6 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
 
-class Product(models.Model):
-    title = models.CharField(max_length=255, verbose_name="عنوان")
-    code = models.CharField(max_length=100, unique=True, verbose_name="کد")
-    description = models.TextField(blank=True, null=True, verbose_name="توضیحات")
-    price_per_unit = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="قیمت واحد")
-    current_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="موجودی فعلی")
-    min_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="حداقل موجودی")
-    unit = models.CharField(max_length=20, verbose_name="واحد (قدیمی)")
-    unit_ref = models.ForeignKey('Unit', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="واحد")
-    
-    class Meta:
-        verbose_name = "محصول"
-        verbose_name_plural = "محصولات"
-        ordering = ['title']
-    
-    def __str__(self):
-        if self.unit_ref:
-            return f"{self.title} ({self.code})"
-        else:
-            return f"{self.title} ({self.code})"
-
 class Unit(models.Model):
     name = models.CharField(max_length=50, unique=True, verbose_name="نام واحد")
     symbol = models.CharField(max_length=10, verbose_name="نماد")
@@ -68,6 +47,27 @@ class Unit(models.Model):
     
     def __str__(self):
         return f"{self.name} ({self.symbol})"
+
+class Product(models.Model):
+    title = models.CharField(max_length=255, verbose_name="عنوان")
+    code = models.CharField(max_length=100, unique=True, verbose_name="کد")
+    description = models.TextField(blank=True, null=True, verbose_name="توضیحات")
+    price_per_unit = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="قیمت واحد")
+    current_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="موجودی فعلی")
+    min_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="حداقل موجودی")
+    unit = models.CharField(max_length=20, verbose_name="واحد (قدیمی)")
+    unit_ref = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="واحد")
+    
+    class Meta:
+        verbose_name = "محصول"
+        verbose_name_plural = "محصولات"
+        ordering = ['title']
+    
+    def __str__(self):
+        if self.unit_ref:
+            return f"{self.title} ({self.code})"
+        else:
+            return f"{self.title} ({self.code})"
 
 class Driver(models.Model):
     name = models.CharField(max_length=100, verbose_name="نام راننده")

@@ -1,0 +1,51 @@
+{% extends 'workflow/base.html' %}
+{% load static %}
+
+{% block title %}تایید حذف محصول - سیستم مدیریت انبار{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="fas fa-trash-alt mr-2"></i> تایید حذف محصول</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                آیا از حذف محصول <strong>{{ object.title }}</strong> اطمینان دارید؟
+                <p class="mt-2 mb-0">
+                    <small>این عملیات قابل بازگشت نیست.</small>
+                </p>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <strong>اطلاعات محصول</strong>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>عنوان:</strong> {{ object.title }}</p>
+                            <p><strong>کد محصول:</strong> {{ object.code }}</p>
+                            <p><strong>واحد:</strong> {{ object.unit }}</p>
+                            <p><strong>قیمت واحد:</strong> {{ object.price_per_unit|floatformat:0 }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{% url 'product-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-right ml-2"></i> انصراف
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt ml-2"></i> تایید حذف
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

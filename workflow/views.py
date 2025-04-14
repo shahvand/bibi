@@ -75,6 +75,26 @@ class ProductUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         messages.success(self.request, f'Product updated successfully!')
         return super().form_valid(form)
 
+class ProductDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = Product
+    template_name = 'workflow/product_detail.html'
+    context_object_name = 'product'
+    
+    def test_func(self):
+        return self.request.user.role in ['ADMIN', 'WAREHOUSE', 'ACCOUNTANT']
+
+class ProductDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Product
+    template_name = 'workflow/product_confirm_delete.html'
+    success_url = reverse_lazy('product-list')
+    
+    def test_func(self):
+        return self.request.user.role in ['ADMIN', 'WAREHOUSE']
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'محصول با موفقیت حذف شد.')
+        return super().delete(request, *args, **kwargs)
+
 # Driver views
 class DriverListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = Driver
@@ -318,53 +338,175 @@ def confirm_receipt(request, pk):
     return redirect('order-detail', pk=order.pk)
 
 # Report views
-@role_required(['ACCOUNTANT', 'ADMIN'])
+@login_required
 def reports_dashboard(request):
-    today = timezone.now().date()
-    
+    """Dashboard showing all reports and statistics"""
+    # Get counts for dashboard statistics
     context = {
+        'total_products': Product.objects.count(),
         'total_orders': Order.objects.count(),
+        'total_users': User.objects.count(),
+        'total_drivers': Driver.objects.count(),
+        
+        # Order counts by status
         'pending_orders': Order.objects.filter(status='PENDING').count(),
         'approved_orders': Order.objects.filter(status='APPROVED').count(),
+        'ready_orders': Order.objects.filter(status='READY').count(),
+        'shipping_orders': Order.objects.filter(status='SHIPPING').count(),
         'delivered_orders': Order.objects.filter(status='DELIVERED').count(),
-        'received_orders': Order.objects.filter(status='RECEIVED').count(),
-        'today_orders': Order.objects.filter(order_date__date=today).count(),
+        'cancelled_orders': Order.objects.filter(status='CANCELLED').count(),
     }
-    
     return render(request, 'workflow/reports_dashboard.html', context)
 
-@role_required(['ACCOUNTANT', 'ADMIN'])
-def order_report(request):
-    orders = Order.objects.all().order_by('-order_date')
+@login_required
+def inventory_report(request):
+    """Report showing inventory statistics"""
+    products = Product.objects.all()
     
-    # Filter by status if provided
+    # Calculate totals
+    total_stock = sum(product.current_stock or 0 for product in products)
+    total_value = sum((product.current_stock or 0) * (product.price_per_unit or 0) for product in products)
+    
+    # Add total_value property to products
+    for product in products:
+        product.total_value = (product.current_stock or 0) * (product.price_per_unit or 0)
+    
+    # Get products with low stock
+    low_stock_products = sorted([p for p in products if p.current_stock is not None and p.min_stock is not None and p.current_stock <= p.min_stock + 5], 
+                               key=lambda x: x.current_stock)[:5]
+    
+    # Get products with highest value
+    high_value_products = sorted([p for p in products if p.total_value], 
+                                key=lambda x: x.total_value, reverse=True)[:5]
+    
+    context = {
+        'products': products,
+        'total_stock': total_stock,
+        'total_value': total_value,
+        'low_stock_products': low_stock_products,
+        'high_value_products': high_value_products,
+    }
+    return render(request, 'workflow/inventory_report.html', context)
+
+@login_required
+def orders_report(request):
+    """Report showing order statistics"""
+    # Get date filter parameters
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
     status = request.GET.get('status')
+    
+    orders = Order.objects.all()
+    
+    # Apply filters if provided
+    if start_date:
+        orders = orders.filter(created_at__gte=start_date)
+    if end_date:
+        orders = orders.filter(created_at__lte=end_date)
     if status:
         orders = orders.filter(status=status)
     
-    # Filter by date range if provided
+    # Calculate total revenue
+    total_revenue = sum(order.total_price() for order in orders if hasattr(order, 'total_price') and callable(order.total_price))
+    
+    # Count orders by status
+    delivered_count = sum(1 for order in orders if order.status in ['DELIVERED', 'RECEIVED'])
+    processing_count = sum(1 for order in orders if order.status in ['PENDING', 'APPROVED', 'READY', 'SHIPPING'])
+    rejected_count = sum(1 for order in orders if order.status in ['REJECTED', 'CANCELLED'])
+    
+    # Analyze branches with most orders
+    branches = {}
+    for order in orders:
+        branch_name = order.requester.branch_name if hasattr(order.requester, 'branch_name') and order.requester.branch_name else 'نامشخص'
+        if branch_name not in branches:
+            branches[branch_name] = {'order_count': 0, 'total_amount': 0}
+        
+        branches[branch_name]['order_count'] += 1
+        branches[branch_name]['total_amount'] += order.total_price() if hasattr(order, 'total_price') and callable(order.total_price) else 0
+    
+    # Convert to list and sort by order count
+    top_branches = [{'branch_name': name, 'order_count': data['order_count'], 'total_amount': data['total_amount']} 
+                   for name, data in branches.items()]
+    top_branches = sorted(top_branches, key=lambda x: x['order_count'], reverse=True)[:5]
+    
+    context = {
+        'orders': orders,
+        'start_date': start_date,
+        'end_date': end_date,
+        'status': status,
+        'status_choices': Order.STATUS_CHOICES,
+        'total_revenue': total_revenue,
+        'delivered_count': delivered_count,
+        'processing_count': processing_count,
+        'rejected_count': rejected_count,
+        'top_branches': top_branches,
+    }
+    return render(request, 'workflow/orders_report.html', context)
+
+@login_required
+def delivery_report(request):
+    """Report showing delivery statistics by driver"""
+    drivers = Driver.objects.all()
+    
+    driver_stats = []
+    for driver in drivers:
+        driver_orders = Order.objects.filter(driver=driver)
+        total_orders = driver_orders.count()
+        delivered_orders = driver_orders.filter(status='DELIVERED').count()
+        pending_orders = driver_orders.filter(status='SHIPPING').count()
+        
+        driver_stats.append({
+            'driver': driver,
+            'total_orders': total_orders,
+            'delivered_orders': delivered_orders,
+            'pending_orders': pending_orders,
+            'delivery_rate': (delivered_orders / total_orders * 100) if total_orders > 0 else 0
+        })
+    
+    context = {
+        'driver_stats': driver_stats
+    }
+    return render(request, 'workflow/delivery_report.html', context)
+
+@login_required
+def financial_report(request):
+    """Report showing financial statistics"""
+    # Get date filter parameters
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     
+    orders = Order.objects.filter(status='DELIVERED')
+    
+    # Apply date filters if provided
     if start_date:
-        orders = orders.filter(order_date__date__gte=start_date)
-    
+        orders = orders.filter(delivered_at__gte=start_date)
     if end_date:
-        orders = orders.filter(order_date__date__lte=end_date)
+        orders = orders.filter(delivered_at__lte=end_date)
     
-    # Filter by requester if provided
-    requester = request.GET.get('requester')
-    if requester:
-        orders = orders.filter(requester__id=requester)
+    # Calculate total revenue
+    total_revenue = sum(order.total_price() for order in orders if hasattr(order, 'total_price') and callable(order.total_price))
     
-    return render(request, 'workflow/order_report.html', {
+    # Group by month for chart
+    monthly_revenue = {}
+    for order in orders:
+        month_year = order.delivered_at.strftime('%Y-%m')
+        if month_year in monthly_revenue:
+            monthly_revenue[month_year] += order.total_price()
+        else:
+            monthly_revenue[month_year] = order.total_price()
+    
+    context = {
         'orders': orders,
-        'requesters': User.objects.filter(role='REQUESTER'),
-        'status_choices': Order.STATUS_CHOICES,
-    })
+        'total_revenue': total_revenue,
+        'monthly_revenue': monthly_revenue,
+        'start_date': start_date,
+        'end_date': end_date,
+    }
+    return render(request, 'workflow/financial_report.html', context)
 
-@role_required(['ACCOUNTANT', 'ADMIN', 'WAREHOUSE'])
+@login_required
 def generate_invoice_pdf(request, pk):
+    """Generate a PDF invoice for an order"""
     order = get_object_or_404(Order, pk=pk)
     
     # Create a simple HTTP response for now
@@ -376,9 +518,8 @@ def generate_invoice_pdf(request, pk):
     
     lines = [
         f"INVOICE #{order.id}",
-        f"Date: {order.order_date.strftime('%Y-%m-%d')}",
+        f"Date: {order.created_at.strftime('%Y-%m-%d')}",
         f"Requester: {order.requester.get_full_name() or order.requester.username}",
-        f"Branch: {order.requester.branch_name or 'N/A'}",
         f"Status: {order.get_status_display()}",
         f"Driver: {order.driver.name if order.driver else 'Not assigned'}",
         "",

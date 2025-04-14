@@ -12,11 +12,13 @@ urlpatterns = [
     # Products
     path('products/', views.ProductListView.as_view(), name='product-list'),
     path('products/new/', views.ProductCreateView.as_view(), name='product-create'),
+    path('products/<int:pk>/', views.ProductDetailView.as_view(), name='product-detail'),
     path('products/<int:pk>/update/', views.ProductUpdateView.as_view(), name='product-update'),
+    path('products/<int:pk>/delete/', views.ProductDeleteView.as_view(), name='product-delete'),
     
     # Drivers
     path('drivers/', views.DriverListView.as_view(), name='driver-list'),
-    path('drivers/new/', views.DriverCreateView.as_view(), name='driver-create'),
+    path('drivers/add/', views.DriverCreateView.as_view(), name='driver-create'),
     path('drivers/<int:pk>/update/', views.DriverUpdateView.as_view(), name='driver-update'),
     
     # Orders
@@ -31,5 +33,9 @@ urlpatterns = [
     
     # Reports
     path('reports/', views.reports_dashboard, name='reports-dashboard'),
-    path('reports/orders/', views.order_report, name='order-report'),
+    path('reports/inventory/', views.inventory_report, name='inventory-report'),
+    path('reports/orders/', views.orders_report, name='orders-report'),
+    path('reports/delivery/', views.delivery_report, name='delivery-report'),
+    path('reports/financial/', views.financial_report, name='financial-report'),
+    path('orders/<int:pk>/invoice/', views.generate_invoice_pdf, name='generate-invoice'),
 ] 

@@ -35,10 +35,9 @@
                     <thead class="thead-dark">
                         <tr>
                             <th>شناسه</th>
-                            <th>نام</th>
-                            <th>دسته‌بندی</th>
-                            <th>کد محصول</th>
-                            <th>موجودی</th>
+                            <th>عنوان محصول</th>
+                            <th>کد</th>
+                            <th>واحد</th>
                             <th>قیمت واحد</th>
                             <th>عملیات</th>
                         </tr>
@@ -47,17 +46,10 @@
                         {% for product in products %}
                         <tr>
                             <td>{{ product.id }}</td>
-                            <td>{{ product.name }}</td>
-                            <td>{{ product.category }}</td>
-                            <td>{{ product.sku }}</td>
-                            <td>
-                                {% if product.current_stock <= product.min_stock_level %}
-                                <span class="badge bg-danger">{{ product.current_stock }}</span>
-                                {% else %}
-                                <span class="badge bg-success">{{ product.current_stock }}</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ product.unit_price }}</td>
+                            <td>{{ product.title }}</td>
+                            <td>{{ product.code }}</td>
+                            <td>{{ product.unit }}</td>
+                            <td>{{ product.price_per_unit }}</td>
                             <td>
                                 <div class="btn-group" role="group">
                                     <a href="{% url 'product-detail' product.id %}" class="btn btn-sm btn-info" title="مشاهده جزئیات">
@@ -78,7 +70,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="text-center">محصولی یافت نشد.</td>
+                            <td colspan="6" class="text-center">محصولی یافت نشد.</td>
                         </tr>
                         {% endfor %}
                     </tbody>

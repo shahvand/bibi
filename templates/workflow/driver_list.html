@@ -1,0 +1,71 @@
+{% extends 'workflow/base.html' %}
+{% load static %}
+
+{% block title %}لیست رانندگان - سیستم مدیریت انبار{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-truck mr-2"></i> لیست رانندگان</h5>
+            {% if perms.workflow.add_driver %}
+            <a href="{% url 'driver-create' %}" class="btn btn-sm btn-light">
+                <i class="fas fa-plus-circle ml-1"></i> افزودن راننده جدید
+            </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if drivers %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">نام راننده</th>
+                            <th scope="col">شماره موبایل</th>
+                            <th scope="col">شماره پلاک</th>
+                            <th scope="col">نوع وسیله نقلیه</th>
+                            <th scope="col">وضعیت</th>
+                            <th scope="col">تاریخ افزودن</th>
+                            <th scope="col">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for driver in drivers %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ driver.name }}</td>
+                            <td>{{ driver.phone_number }}</td>
+                            <td>{{ driver.license_plate }}</td>
+                            <td>{{ driver.vehicle_type }}</td>
+                            <td>
+                                {% if driver.is_active %}
+                                <span class="badge badge-success">فعال</span>
+                                {% else %}
+                                <span class="badge badge-danger">غیرفعال</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ driver.created_at|date:"Y/m/d" }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    {% if perms.workflow.change_driver %}
+                                    <a href="{% url 'driver-update' driver.id %}" class="btn btn-sm btn-warning" title="ویرایش">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle ml-2"></i> راننده‌ای یافت نشد.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

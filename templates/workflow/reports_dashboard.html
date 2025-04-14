@@ -1,0 +1,151 @@
+{% extends 'workflow/base.html' %}
+{% load static %}
+
+{% block title %}گزارشات - سیستم مدیریت انبار{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line mr-2"></i> داشبورد گزارشات</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-boxes fa-3x text-primary mb-3"></i>
+                                    <h5 class="card-title">گزارش موجودی</h5>
+                                    <p class="card-text">گزارش موجودی انبار به تفکیک محصول</p>
+                                    <a href="{% url 'inventory-report' %}" class="btn btn-primary">مشاهده</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-shopping-cart fa-3x text-success mb-3"></i>
+                                    <h5 class="card-title">گزارش سفارشات</h5>
+                                    <p class="card-text">گزارش سفارشات به تفکیک وضعیت و تاریخ</p>
+                                    <a href="{% url 'orders-report' %}" class="btn btn-success">مشاهده</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-truck fa-3x text-warning mb-3"></i>
+                                    <h5 class="card-title">گزارش ارسال</h5>
+                                    <p class="card-text">گزارش ارسال سفارشات به تفکیک راننده</p>
+                                    <a href="{% url 'delivery-report' %}" class="btn btn-warning">مشاهده</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-money-bill-wave fa-3x text-danger mb-3"></i>
+                                    <h5 class="card-title">گزارش مالی</h5>
+                                    <p class="card-text">گزارش مالی و درآمد به تفکیک دوره زمانی</p>
+                                    <a href="{% url 'financial-report' %}" class="btn btn-danger">مشاهده</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0">آمار کلی سیستم</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                                                <span><i class="fas fa-cubes mr-2"></i> تعداد کل محصولات:</span>
+                                                <span class="badge badge-primary">{{ total_products }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                                                <span><i class="fas fa-shopping-cart mr-2"></i> تعداد کل سفارشات:</span>
+                                                <span class="badge badge-success">{{ total_orders }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                                                <span><i class="fas fa-users mr-2"></i> تعداد کاربران:</span>
+                                                <span class="badge badge-info">{{ total_users }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                                                <span><i class="fas fa-truck mr-2"></i> تعداد رانندگان:</span>
+                                                <span class="badge badge-warning">{{ total_drivers }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0">وضعیت سفارشات</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                                                <span><i class="fas fa-clock mr-2"></i> در انتظار تایید:</span>
+                                                <span class="badge badge-secondary">{{ pending_orders }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                                                <span><i class="fas fa-check mr-2"></i> تایید شده:</span>
+                                                <span class="badge badge-info">{{ approved_orders }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                                                <span><i class="fas fa-box mr-2"></i> آماده ارسال:</span>
+                                                <span class="badge badge-primary">{{ ready_orders }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                                                <span><i class="fas fa-shipping-fast mr-2"></i> در حال ارسال:</span>
+                                                <span class="badge badge-warning">{{ shipping_orders }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                                                <span><i class="fas fa-check-circle mr-2"></i> تحویل داده شده:</span>
+                                                <span class="badge badge-success">{{ delivered_orders }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                                                <span><i class="fas fa-times-circle mr-2"></i> لغو شده:</span>
+                                                <span class="badge badge-danger">{{ cancelled_orders }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

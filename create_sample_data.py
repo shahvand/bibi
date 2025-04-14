@@ -17,11 +17,11 @@ def create_users():
     
     # ایجاد کاربران درخواست کننده (شعبه‌ها)
     branches = [
-        {'username': 'branch1', 'name': 'شعبه مرکزی', 'email': 'branch1@example.com'},
-        {'username': 'branch2', 'name': 'شعبه شمال', 'email': 'branch2@example.com'},
-        {'username': 'branch3', 'name': 'شعبه جنوب', 'email': 'branch3@example.com'},
-        {'username': 'branch4', 'name': 'شعبه شرق', 'email': 'branch4@example.com'},
-        {'username': 'branch5', 'name': 'شعبه غرب', 'email': 'branch5@example.com'},
+        {'username': 'tehran_markazi', 'name': 'شعبه مرکزی تهران', 'email': 'tehran@example.com'},
+        {'username': 'isfahan', 'name': 'شعبه اصفهان', 'email': 'isfahan@example.com'},
+        {'username': 'mashhad', 'name': 'شعبه مشهد', 'email': 'mashhad@example.com'},
+        {'username': 'shiraz', 'name': 'شعبه شیراز', 'email': 'shiraz@example.com'},
+        {'username': 'tabriz', 'name': 'شعبه تبریز', 'email': 'tabriz@example.com'},
     ]
     
     requesters = []
@@ -29,7 +29,7 @@ def create_users():
         user = User.objects.create_user(
             username=branch['username'],
             email=branch['email'],
-            password='password123',
+            password='123456',
             first_name=branch['name'],
             role='REQUESTER',
             branch_name=branch['name']
@@ -39,22 +39,22 @@ def create_users():
     
     # ایجاد کاربر انباردار
     warehouse_manager = User.objects.create_user(
-        username='warehouse',
-        email='warehouse@example.com',
-        password='password123',
-        first_name='مدیر',
-        last_name='انبار',
+        username='anbardar',
+        email='anbardar@example.com',
+        password='123456',
+        first_name='محمد',
+        last_name='امینی',
         role='WAREHOUSE'
     )
     print(f"کاربر انباردار ایجاد شد: {warehouse_manager.username}")
     
     # ایجاد کاربر حسابدار
     accountant = User.objects.create_user(
-        username='accountant',
-        email='accountant@example.com',
-        password='password123',
-        first_name='حسابدار',
-        last_name='سیستم',
+        username='hesabdar',
+        email='hesabdar@example.com',
+        password='123456',
+        first_name='علی',
+        last_name='حسابی',
         role='ACCOUNTANT'
     )
     print(f"کاربر حسابدار ایجاد شد: {accountant.username}")
@@ -66,16 +66,21 @@ def create_products():
     print("\nایجاد محصولات...")
     
     products = [
-        {'title': 'برنج ایرانی', 'code': 'R001', 'unit': 'کیلوگرم', 'price_per_unit': Decimal('150000')},
-        {'title': 'روغن مایع', 'code': 'O001', 'unit': 'لیتر', 'price_per_unit': Decimal('120000')},
-        {'title': 'قند', 'code': 'S001', 'unit': 'کیلوگرم', 'price_per_unit': Decimal('80000')},
-        {'title': 'چای', 'code': 'T001', 'unit': 'بسته', 'price_per_unit': Decimal('200000')},
-        {'title': 'ماکارونی', 'code': 'P001', 'unit': 'بسته', 'price_per_unit': Decimal('40000')},
-        {'title': 'رب گوجه', 'code': 'TP001', 'unit': 'قوطی', 'price_per_unit': Decimal('65000')},
-        {'title': 'حبوبات', 'code': 'B001', 'unit': 'کیلوگرم', 'price_per_unit': Decimal('90000')},
-        {'title': 'نوشابه', 'code': 'SD001', 'unit': 'بطری', 'price_per_unit': Decimal('15000')},
-        {'title': 'آب معدنی', 'code': 'W001', 'unit': 'بطری', 'price_per_unit': Decimal('8000')},
-        {'title': 'شکر', 'code': 'SG001', 'unit': 'کیلوگرم', 'price_per_unit': Decimal('70000')},
+        {'title': 'برنج ایرانی طارم', 'code': 'R001', 'unit': 'کیلوگرم', 'price_per_unit': Decimal('150000')},
+        {'title': 'روغن زیتون فرابکر', 'code': 'O001', 'unit': 'لیتر', 'price_per_unit': Decimal('320000')},
+        {'title': 'قند شکسته', 'code': 'S001', 'unit': 'کیلوگرم', 'price_per_unit': Decimal('70000')},
+        {'title': 'چای ایرانی ممتاز', 'code': 'T001', 'unit': 'بسته 500 گرمی', 'price_per_unit': Decimal('220000')},
+        {'title': 'ماکارونی قطر بزرگ', 'code': 'P001', 'unit': 'بسته 700 گرمی', 'price_per_unit': Decimal('40000')},
+        {'title': 'رب گوجه ایرانی', 'code': 'TP001', 'unit': 'قوطی 800 گرمی', 'price_per_unit': Decimal('65000')},
+        {'title': 'عدس درشت', 'code': 'B001', 'unit': 'کیلوگرم', 'price_per_unit': Decimal('90000')},
+        {'title': 'نوشابه خانواده', 'code': 'SD001', 'unit': 'بطری 1.5 لیتری', 'price_per_unit': Decimal('25000')},
+        {'title': 'آب معدنی دماوند', 'code': 'W001', 'unit': 'بطری 1.5 لیتری', 'price_per_unit': Decimal('8000')},
+        {'title': 'شکر سفید', 'code': 'SG001', 'unit': 'کیلوگرم', 'price_per_unit': Decimal('52000')},
+        {'title': 'زعفران اعلا', 'code': 'Z001', 'unit': 'مثقال', 'price_per_unit': Decimal('950000')},
+        {'title': 'خرمای مضافتی', 'code': 'KH001', 'unit': 'کیلوگرم', 'price_per_unit': Decimal('120000')},
+        {'title': 'پنیر لیقوان', 'code': 'PN001', 'unit': 'کیلوگرم', 'price_per_unit': Decimal('180000')},
+        {'title': 'کشک خانگی', 'code': 'K001', 'unit': 'کیلوگرم', 'price_per_unit': Decimal('140000')},
+        {'title': 'پسته اکبری', 'code': 'PS001', 'unit': 'کیلوگرم', 'price_per_unit': Decimal('1450000')},
     ]
     
     product_objects = []
@@ -97,10 +102,12 @@ def create_drivers():
     
     drivers = [
         {'name': 'علی محمدی', 'phone': '09123456789'},
-        {'name': 'رضا احمدی', 'phone': '09123456788'},
+        {'name': 'رضا تقوی', 'phone': '09123456788'},
         {'name': 'حسن کریمی', 'phone': '09123456787'},
         {'name': 'مهدی رضایی', 'phone': '09123456786'},
         {'name': 'جواد صادقی', 'phone': '09123456785'},
+        {'name': 'سعید نوروزی', 'phone': '09123456784'},
+        {'name': 'محمد احمدی', 'phone': '09123456783'},
     ]
     
     driver_objects = []
@@ -130,8 +137,29 @@ def create_orders(requesters, warehouse_manager, products, drivers):
         now,                       # امروز
     ]
     
-    # ایجاد 20 سفارش نمونه
-    for i in range(1, 21):
+    # یادداشت‌های نمونه برای سفارش‌ها
+    order_notes = [
+        "لطفا سریعا ارسال شود",
+        "تحویل در ساعات اداری",
+        "بسته‌بندی محکم نیاز است",
+        "لطفا هماهنگی قبل از ارسال",
+        "اقلام فاسد شدنی - ارسال سریع",
+        "با پیک موتوری ارسال شود",
+        "لطفا با شعبه هماهنگ شود",
+        "",  # بدون یادداشت
+    ]
+    
+    # یادداشت‌های نمونه برای اقلام سفارش
+    item_notes = [
+        "بسته‌بندی مرغوب باشد",
+        "تاریخ انقضا جدید باشد",
+        "از انبار مرکزی تامین شود",
+        "کیفیت درجه یک",
+        "",  # بدون یادداشت
+    ]
+    
+    # ایجاد 30 سفارش نمونه
+    for i in range(1, 31):
         # انتخاب تصادفی درخواست کننده
         requester = random.choice(requesters)
         
@@ -181,15 +209,15 @@ def create_orders(requesters, warehouse_manager, products, drivers):
             approval_date=approval_date,
             delivery_date=delivery_date,
             receipt_date=receipt_date,
-            notes=f"سفارش نمونه شماره {i}" if random.choice([True, False]) else ""
+            notes=random.choice(order_notes) if random.choice([True, False]) else ""
         )
         
-        # ایجاد اقلام سفارش (بین 1 تا 5 قلم)
-        num_items = random.randint(1, 5)
+        # ایجاد اقلام سفارش (بین 2 تا 8 قلم)
+        num_items = random.randint(2, 8)
         selected_products = random.sample(products, num_items)
         
         for product in selected_products:
-            requested_quantity = Decimal(str(random.randint(1, 10)))
+            requested_quantity = Decimal(str(random.randint(1, 15)))
             
             if status == 'PENDING':
                 approved_quantity = None
@@ -213,7 +241,7 @@ def create_orders(requesters, warehouse_manager, products, drivers):
                 requested_quantity=requested_quantity,
                 approved_quantity=approved_quantity,
                 price_per_unit=price_per_unit,
-                notes="" if random.choice([True, True, False]) else "توضیحات نمونه برای این آیتم"
+                notes=random.choice(item_notes) if random.choice([True, False, False]) else ""
             )
         
         print(f"سفارش ایجاد شد: شماره {order.id} - وضعیت: {status} - تعداد اقلام: {num_items}")
@@ -242,10 +270,10 @@ def main():
     print("داده‌های نمونه با موفقیت ایجاد شدند!")
     print("=" * 50)
     print("\nاطلاعات ورود به سیستم:")
-    print("کاربران درخواست کننده (شعبه‌ها): نام کاربری: branch1 تا branch5، رمز عبور: password123")
-    print("کاربر انباردار: نام کاربری: warehouse، رمز عبور: password123")
-    print("کاربر حسابدار: نام کاربری: accountant، رمز عبور: password123")
-    print("کاربر مدیر: نام کاربری: admin، رمز عبور: (رمزی که هنگام ایجاد مدیر وارد کردید)")
+    print("کاربران درخواست کننده (شعبه‌ها): نام کاربری: tehran_markazi, isfahan, و غیره - رمز عبور: 123456")
+    print("کاربر انباردار: نام کاربری: anbardar - رمز عبور: 123456")
+    print("کاربر حسابدار: نام کاربری: hesabdar - رمز عبور: 123456")
+    print("کاربر مدیر: نام کاربری: admin - رمز عبور: (رمزی که هنگام ایجاد مدیر وارد کردید)")
 
 if __name__ == "__main__":
     main() 

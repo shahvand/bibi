@@ -1,0 +1,180 @@
+{% extends 'workflow/base.html' %}
+
+{% block title %}لیست سفارش‌ها - سیستم مدیریت انبار{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>لیست سفارش‌ها</h2>
+        {% if user.role == 'REQUESTER' %}
+        <a href="{% url 'order-create' %}" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> سفارش جدید
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-light">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="status" class="form-label">وضعیت</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">همه وضعیت‌ها</option>
+                        <option value="PENDING" {% if request.GET.status == 'PENDING' %}selected{% endif %}>در انتظار</option>
+                        <option value="APPROVED" {% if request.GET.status == 'APPROVED' %}selected{% endif %}>تایید شده</option>
+                        <option value="REJECTED" {% if request.GET.status == 'REJECTED' %}selected{% endif %}>رد شده</option>
+                        <option value="DELIVERED" {% if request.GET.status == 'DELIVERED' %}selected{% endif %}>تحویل داده شده</option>
+                        <option value="RECEIVED" {% if request.GET.status == 'RECEIVED' %}selected{% endif %}>دریافت شده</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="date_from" class="form-label">از تاریخ</label>
+                    <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request.GET.date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="date_to" class="form-label">تا تاریخ</label>
+                    <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request.GET.date_to }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="search" class="form-label">جستجو</label>
+                    <div class="input-group">
+                        <input type="text" name="search" id="search" class="form-control" placeholder="جستجو..." value="{{ request.GET.search }}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>شماره</th>
+                            <th>درخواست کننده</th>
+                            <th>تاریخ</th>
+                            <th>وضعیت</th>
+                            <th>تعداد اقلام</th>
+                            <th>مجموع مبلغ</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>{{ order.id }}</td>
+                            <td>
+                                {% if order.requester %}
+                                {{ order.requester.get_full_name|default:order.requester.username }}
+                                <small class="text-muted d-block">{{ order.requester.branch_name }}</small>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>{{ order.order_date|date:"Y/m/d H:i" }}</td>
+                            <td>
+                                {% if order.status == 'PENDING' %}
+                                <span class="badge bg-warning">در انتظار</span>
+                                {% elif order.status == 'APPROVED' %}
+                                <span class="badge bg-success">تایید شده</span>
+                                {% elif order.status == 'REJECTED' %}
+                                <span class="badge bg-danger">رد شده</span>
+                                {% elif order.status == 'DELIVERED' %}
+                                <span class="badge bg-info">تحویل داده شده</span>
+                                {% elif order.status == 'RECEIVED' %}
+                                <span class="badge bg-primary">دریافت شده</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ order.items_count }}</td>
+                            <td>
+                                {% if order.total_price %}
+                                {{ order.total_price|call|floatformat:0 }} تومان
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'order-detail' order.id %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i> مشاهده
+                                    </a>
+                                    
+                                    {% if user.role == 'WAREHOUSE' and order.status == 'PENDING' %}
+                                    <a href="{% url 'order-approve' order.id %}" class="btn btn-sm btn-success ms-1">
+                                        <i class="fas fa-check"></i> تایید
+                                    </a>
+                                    <a href="{% url 'order-reject' order.id %}" class="btn btn-sm btn-danger ms-1">
+                                        <i class="fas fa-times"></i> رد
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if user.role == 'WAREHOUSE' and order.status == 'APPROVED' %}
+                                    <a href="{% url 'order-deliver' order.id %}" class="btn btn-sm btn-primary ms-1">
+                                        <i class="fas fa-truck"></i> ارسال
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if user.role == 'REQUESTER' and order.status == 'DELIVERED' %}
+                                    <a href="{% url 'order-receive' order.id %}" class="btn btn-sm btn-success ms-1">
+                                        <i class="fas fa-clipboard-check"></i> تایید دریافت
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if user.role == 'ACCOUNTANT' and order.status == 'RECEIVED' %}
+                                    <a href="{% url 'order-invoice' order.id %}" class="btn btn-sm btn-primary ms-1">
+                                        <i class="fas fa-file-invoice"></i> صدور فاکتور
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">هیچ سفارشی یافت نشد</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer">
+            {% if is_paginated %}
+            <nav aria-label="صفحه‌بندی">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page=1">اولین</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ page_obj.previous_page_number }}">قبلی</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ page_obj.next_page_number }}">بعدی</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ page_obj.paginator.num_pages }}">آخرین</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

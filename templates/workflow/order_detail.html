@@ -79,7 +79,7 @@
                         <tbody>
                             <tr>
                                 <th>Warehouse Manager:</th>
-                                <td>{{ order.warehouse_manager.get_full_name|default:order.warehouse_manager.username|default:"Not assigned" }}</td>
+                                <td>{% if order.warehouse_manager %}{{ order.warehouse_manager.get_full_name|default:order.warehouse_manager.username }}{% else %}Not assigned{% endif %}</td>
                             </tr>
                             <tr>
                                 <th>Driver:</th>
@@ -129,7 +129,7 @@
                         <tfoot>
                             <tr>
                                 <th colspan="5" class="text-end">Total:</th>
-                                <th>{{ order.total_price }}</th>
+                                <th>{{ order.total_price|call }}</th>
                                 <th></th>
                             </tr>
                         </tfoot>

@@ -1,4 +1,5 @@
 {% extends 'workflow/base.html' %}
+{% load workflow_filters %}
 
 {% block title %}جزئیات محصول - سیستم مدیریت انبار{% endblock %}
 
@@ -49,15 +50,15 @@
                             <div class="col-4 fw-bold">موجودی فعلی:</div>
                             <div class="col-8">
                                 {% if product.current_stock <= product.min_stock_level %}
-                                <span class="badge bg-danger">{{ product.current_stock }}</span>
+                                <span class="badge bg-danger">{{ product.current_stock|format_price }}</span>
                                 {% else %}
-                                <span class="badge bg-success">{{ product.current_stock }}</span>
+                                <span class="badge bg-success">{{ product.current_stock|format_price }}</span>
                                 {% endif %}
                             </div>
                         </div>
                         <div class="row mb-2">
                             <div class="col-4 fw-bold">حداقل موجودی:</div>
-                            <div class="col-8">{{ product.min_stock_level }}</div>
+                            <div class="col-8">{{ product.min_stock_level|format_price }}</div>
                         </div>
                         <div class="row mb-2">
                             <div class="col-4 fw-bold">واحد اندازه‌گیری:</div>
@@ -65,7 +66,7 @@
                         </div>
                         <div class="row mb-2">
                             <div class="col-4 fw-bold">قیمت واحد:</div>
-                            <div class="col-8">{{ product.unit_price }}</div>
+                            <div class="col-8">{{ product.unit_price|format_price }}</div>
                         </div>
                     </div>
                 </div>
@@ -98,7 +99,7 @@
                                     <span class="badge bg-secondary">نامشخص</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ transaction.quantity }}</td>
+                                <td>{{ transaction.quantity|format_price }}</td>
                                 <td>{{ transaction.timestamp }}</td>
                                 <td>{{ transaction.created_by }}</td>
                                 <td>{{ transaction.notes|default:"-" }}</td>

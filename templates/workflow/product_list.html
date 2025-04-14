@@ -1,4 +1,5 @@
 {% extends 'workflow/base.html' %}
+{% load workflow_filters %}
 
 {% block title %}لیست محصولات - سیستم مدیریت انبار{% endblock %}
 
@@ -49,7 +50,7 @@
                             <td>{{ product.title }}</td>
                             <td>{{ product.code }}</td>
                             <td>{{ product.unit }}</td>
-                            <td>{{ product.price_per_unit }}</td>
+                            <td>{{ product.price_per_unit|format_price }}</td>
                             <td>
                                 <div class="btn-group" role="group">
                                     <a href="{% url 'product-detail' product.id %}" class="btn btn-sm btn-info" title="مشاهده جزئیات">

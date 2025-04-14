@@ -1,5 +1,6 @@
 {% extends 'workflow/base.html' %}
 {% load jdate_filters %}
+{% load workflow_filters %}
 
 {% block title %}سفارش #{{ order.id }} - سیستم مدیریت انبار{% endblock %}
 
@@ -11,7 +12,7 @@
             <div>
                 {% if order.status == 'APPROVED' or order.status == 'DELIVERED' or order.status == 'RECEIVED' %}
                     <a href="{% url 'order-invoice' order.id %}" class="btn btn-success" target="_blank">
-                        <i class="fas fa-file-invoice"></i> ایجاد فاکتور
+                        <i class="fas fa-print"></i> آماده‌سازی پرینت
                     </a>
                 {% endif %}
                 <a href="{% url 'order-list' %}" class="btn btn-outline-primary">
@@ -222,7 +223,7 @@
                         <form method="post" action="{% url 'order-confirm-receipt' order.id %}">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-success">
-                                <i class="fas fa-check-circle"></i> تایید دریافت
+                                <i class="fas fa-truck"></i> ثبت به عنوان تحویل شده
                             </button>
                         </form>
                     </div>

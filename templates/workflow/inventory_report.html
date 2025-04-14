@@ -1,5 +1,6 @@
 {% extends 'workflow/base.html' %}
 {% load static %}
+{% load workflow_filters %}
 
 {% block title %}گزارش موجودی - سیستم مدیریت انبار{% endblock %}
 
@@ -34,9 +35,9 @@
                             <td>{{ product.code }}</td>
                             <td>{{ product.title }}</td>
                             <td>{{ product.unit }}</td>
-                            <td>{{ product.current_stock }}</td>
-                            <td>{{ product.price_per_unit|floatformat:0 }}</td>
-                            <td>{{ product.total_value|floatformat:0 }}</td>
+                            <td>{{ product.current_stock|format_price }}</td>
+                            <td>{{ product.price_per_unit|format_price }}</td>
+                            <td>{{ product.total_value|format_price }}</td>
                             <td>
                                 {% if product.current_stock <= product.min_stock %}
                                 <span class="badge badge-danger">نیاز به سفارش</span>
@@ -56,9 +57,9 @@
                     <tfoot class="bg-light">
                         <tr class="font-weight-bold">
                             <td colspan="4" class="text-left">مجموع</td>
-                            <td>{{ total_stock }}</td>
+                            <td>{{ total_stock|format_price }}</td>
                             <td>-</td>
-                            <td>{{ total_value|floatformat:0 }}</td>
+                            <td>{{ total_value|format_price }}</td>
                             <td>-</td>
                         </tr>
                     </tfoot>
@@ -84,8 +85,8 @@
                                     {% for product in low_stock_products %}
                                     <tr>
                                         <td>{{ product.title }}</td>
-                                        <td>{{ product.current_stock }}</td>
-                                        <td>{{ product.min_stock }}</td>
+                                        <td>{{ product.current_stock|format_price }}</td>
+                                        <td>{{ product.min_stock|format_price }}</td>
                                     </tr>
                                     {% empty %}
                                     <tr>
@@ -116,8 +117,8 @@
                                     {% for product in high_value_products %}
                                     <tr>
                                         <td>{{ product.title }}</td>
-                                        <td>{{ product.current_stock }}</td>
-                                        <td>{{ product.total_value|floatformat:0 }}</td>
+                                        <td>{{ product.current_stock|format_price }}</td>
+                                        <td>{{ product.total_value|format_price }}</td>
                                     </tr>
                                     {% empty %}
                                     <tr>

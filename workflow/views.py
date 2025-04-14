@@ -486,16 +486,33 @@ def generate_invoice_pdf(request, pk):
     """Generate a PDF invoice for an order"""
     order = get_object_or_404(Order, pk=pk)
     
-    # Create a simple HTTP response for now
     # In a production environment, you would use a library like ReportLab or WeasyPrint
     # to generate a proper PDF invoice
     
     response = HttpResponse(content_type='text/plain')
     response['Content-Disposition'] = f'attachment; filename="invoice_{order.id}.txt"'
     
+    # تابع کمکی برای فرمت کردن قیمت‌ها
+    def format_price(value):
+        if value is None:
+            return ""
+        
+        try:
+            # تبدیل به Decimal برای اطمینان
+            decimal_value = decimal.Decimal(str(value))
+            
+            # اگر عدد صحیح است، فقط بخش صحیح را برگردان
+            if decimal_value == decimal_value.to_integral_value():
+                return int(decimal_value)
+            
+            # در غیر این صورت، عدد اعشاری را برگردان، با حذف صفرهای انتهایی
+            return str(decimal_value).rstrip('0').rstrip('.') if '.' in str(decimal_value) else decimal_value
+        except:
+            return value
+    
     lines = [
         f"INVOICE #{order.id}",
-        f"Date: {order.created_at.strftime('%Y-%m-%d')}",
+        f"Date: {order.order_date.strftime('%Y-%m-%d')}",
         f"Requester: {order.requester.get_full_name() or order.requester.username}",
         f"Status: {order.get_status_display()}",
         f"Driver: {order.driver.name if order.driver else 'Not assigned'}",
@@ -513,11 +530,11 @@ def generate_invoice_pdf(request, pk):
         total = price * qty
         total_price += total
         
-        lines.append(f"{item.product.title} ({item.product.code}) | {qty} | {item.product.unit} | {price} | {total}")
+        lines.append(f"{item.product.title} ({item.product.code}) | {format_price(qty)} | {item.product.unit} | {format_price(price)} | {format_price(total)}")
     
     lines.extend([
         "----------------------------------------------",
-        f"TOTAL: {total_price}",
+        f"TOTAL: {format_price(total_price)}",
         "",
         f"Notes: {order.notes or 'N/A'}"
     ])

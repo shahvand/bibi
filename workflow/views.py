@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.db import transaction
+import decimal
 
 from .models import User, Product, Order, OrderItem, Driver
 from .forms import (
@@ -227,9 +228,13 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
         context['items'] = self.object.items.all()
         
         # For warehouse manager
-        if self.request.user.role == 'WAREHOUSE' and self.object.status == 'PENDING':
-            context['warehouse_form'] = WarehouseOrderForm(instance=self.object)
-            context['can_approve'] = True
+        if self.request.user.role == 'WAREHOUSE':
+            # Add drivers to context for all warehouse managers regardless of status
+            context['drivers'] = Driver.objects.all()
+            
+            if self.object.status == 'PENDING':
+                context['warehouse_form'] = WarehouseOrderForm(instance=self.object)
+                context['can_approve'] = True
         
         # For requester
         if self.request.user.role == 'REQUESTER' and self.object.status == 'DELIVERED':
@@ -243,41 +248,39 @@ def approve_order(request, pk):
     order = get_object_or_404(Order, pk=pk)
     
     if order.status != 'PENDING':
-        messages.error(request, 'This order cannot be approved because it is not pending.')
+        messages.error(request, 'این سفارش نمی‌تواند تایید شود زیرا در وضعیت انتظار نیست.')
         return redirect('order-detail', pk=order.pk)
     
     if request.method == 'POST':
-        order_form = WarehouseOrderForm(request.POST, instance=order)
-        items_data = []
+        action = request.POST.get('action')
         
-        for item in order.items.all():
-            item_prefix = f'item_{item.id}'
-            item_data = {
-                'approved_quantity': request.POST.get(f'{item_prefix}_approved_quantity', item.requested_quantity),
-                'price_per_unit': request.POST.get(f'{item_prefix}_price_per_unit', item.product.price_per_unit),
-                'notes': request.POST.get(f'{item_prefix}_notes', ''),
-            }
-            items_data.append((item, item_data))
-        
-        if order_form.is_valid():
+        if action == 'approve':
             with transaction.atomic():
-                # Save the main order form
-                order_form.save()
+                # Update each item's approved quantity
+                for item in order.items.all():
+                    item_quantity = request.POST.get(f'item_{item.id}')
+                    if item_quantity:
+                        try:
+                            item.approved_quantity = decimal.Decimal(item_quantity)
+                            item.save()
+                        except decimal.InvalidOperation:
+                            messages.error(request, f'مقدار نامعتبر برای {item.product.title}')
+                            return redirect('order-detail', pk=order.pk)
                 
-                # Update each item
-                for item, item_data in items_data:
-                    item.approved_quantity = item_data['approved_quantity']
-                    item.price_per_unit = item_data['price_per_unit']
-                    item.notes = item_data['notes']
-                    item.save()
+                # Add notes if provided
+                notes = request.POST.get('notes')
+                if notes:
+                    order.notes = notes
                 
                 # Mark as approved
                 order.approve(request.user)
                 
-                messages.success(request, 'Order approved successfully!')
-                return redirect('order-detail', pk=order.pk)
-        else:
-            messages.error(request, 'There was an error in the form. Please check the data.')
+                messages.success(request, 'سفارش با موفقیت تایید شد!')
+        
+        elif action == 'reject':
+            notes = request.POST.get('notes', '')
+            order.reject(request.user, notes)
+            messages.success(request, 'سفارش با موفقیت رد شد.')
     
     return redirect('order-detail', pk=order.pk)
 
@@ -359,36 +362,6 @@ def reports_dashboard(request):
     return render(request, 'workflow/reports_dashboard.html', context)
 
 @login_required
-def inventory_report(request):
-    """Report showing inventory statistics"""
-    products = Product.objects.all()
-    
-    # Calculate totals
-    total_stock = sum(product.current_stock or 0 for product in products)
-    total_value = sum((product.current_stock or 0) * (product.price_per_unit or 0) for product in products)
-    
-    # Add total_value property to products
-    for product in products:
-        product.total_value = (product.current_stock or 0) * (product.price_per_unit or 0)
-    
-    # Get products with low stock
-    low_stock_products = sorted([p for p in products if p.current_stock is not None and p.min_stock is not None and p.current_stock <= p.min_stock + 5], 
-                               key=lambda x: x.current_stock)[:5]
-    
-    # Get products with highest value
-    high_value_products = sorted([p for p in products if p.total_value], 
-                                key=lambda x: x.total_value, reverse=True)[:5]
-    
-    context = {
-        'products': products,
-        'total_stock': total_stock,
-        'total_value': total_value,
-        'low_stock_products': low_stock_products,
-        'high_value_products': high_value_products,
-    }
-    return render(request, 'workflow/inventory_report.html', context)
-
-@login_required
 def orders_report(request):
     """Report showing order statistics"""
     # Get date filter parameters
@@ -407,7 +380,7 @@ def orders_report(request):
         orders = orders.filter(status=status)
     
     # Calculate total revenue
-    total_revenue = sum(order.total_price() for order in orders if hasattr(order, 'total_price') and callable(order.total_price))
+    total_revenue = sum(order.total_price for order in orders if hasattr(order, 'total_price'))
     
     # Count orders by status
     delivered_count = sum(1 for order in orders if order.status in ['DELIVERED', 'RECEIVED'])
@@ -422,7 +395,7 @@ def orders_report(request):
             branches[branch_name] = {'order_count': 0, 'total_amount': 0}
         
         branches[branch_name]['order_count'] += 1
-        branches[branch_name]['total_amount'] += order.total_price() if hasattr(order, 'total_price') and callable(order.total_price) else 0
+        branches[branch_name]['total_amount'] += order.total_price if hasattr(order, 'total_price') else 0
     
     # Convert to list and sort by order count
     top_branches = [{'branch_name': name, 'order_count': data['order_count'], 'total_amount': data['total_amount']} 
@@ -484,16 +457,20 @@ def financial_report(request):
         orders = orders.filter(delivered_at__lte=end_date)
     
     # Calculate total revenue
-    total_revenue = sum(order.total_price() for order in orders if hasattr(order, 'total_price') and callable(order.total_price))
+    total_revenue = sum(order.total_price for order in orders if hasattr(order, 'total_price'))
     
     # Group by month for chart
     monthly_revenue = {}
     for order in orders:
-        month_year = order.delivered_at.strftime('%Y-%m')
-        if month_year in monthly_revenue:
-            monthly_revenue[month_year] += order.total_price()
-        else:
-            monthly_revenue[month_year] = order.total_price()
+        if order.delivered_at:  # Check if delivered_at is not None
+            month_year = order.delivered_at.strftime('%Y-%m')
+            if month_year in monthly_revenue:
+                monthly_revenue[month_year] += order.total_price
+            else:
+                monthly_revenue[month_year] = order.total_price
+    
+    # Sort monthly revenue by date for better display
+    monthly_revenue = dict(sorted(monthly_revenue.items()))
     
     context = {
         'orders': orders,

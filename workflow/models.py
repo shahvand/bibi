@@ -37,13 +37,19 @@ class User(AbstractUser):
         return f"{self.username} ({self.get_role_display()})"
 
 class Product(models.Model):
-    title = models.CharField(max_length=100)
-    code = models.CharField(max_length=20, unique=True)
-    unit = models.CharField(max_length=20)  # e.g., kg, piece, box
-    price_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
+    title = models.CharField(max_length=100, verbose_name="عنوان محصول")
+    code = models.CharField(max_length=20, unique=True, verbose_name="کد")
+    unit = models.CharField(max_length=20, verbose_name="واحد")  # e.g., kg, piece, box
+    price_per_unit = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="قیمت واحد")
+    current_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="موجودی فعلی")
+    min_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="حداقل موجودی")
     
     def __str__(self):
         return f"{self.title} ({self.code})"
+
+    class Meta:
+        verbose_name = "محصول"
+        verbose_name_plural = "محصولات"
 
 class Driver(models.Model):
     name = models.CharField(max_length=100)
@@ -71,6 +77,7 @@ class Order(models.Model):
     approval_date = models.DateTimeField(null=True, blank=True)
     delivery_date = models.DateTimeField(null=True, blank=True)
     receipt_date = models.DateTimeField(null=True, blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
     
     notes = models.TextField(blank=True, null=True)
     
@@ -96,6 +103,7 @@ class Order(models.Model):
         if driver:
             self.driver = driver
         self.delivery_date = timezone.now()
+        self.delivered_at = timezone.now()
         self.save()
     
     def mark_received(self):
@@ -103,6 +111,7 @@ class Order(models.Model):
         self.receipt_date = timezone.now()
         self.save()
     
+    @property
     def total_price(self):
         return sum(item.total_price for item in self.items.all())
 

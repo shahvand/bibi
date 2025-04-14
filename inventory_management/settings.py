@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     
     # Third-party apps
     'crispy_forms',
+    'crispy_bootstrap4',
     'django_filters',
     
     # Local apps
@@ -170,4 +171,5 @@ MESSAGE_TAGS = {
 }
 
 # Crispy Forms
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 CRISPY_TEMPLATE_PACK = 'bootstrap4'

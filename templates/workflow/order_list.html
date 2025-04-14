@@ -1,4 +1,5 @@
 {% extends 'workflow/base.html' %}
+{% load jdate_filters %}
 
 {% block title %}لیست سفارش‌ها - سیستم مدیریت انبار{% endblock %}
 
@@ -49,15 +50,15 @@
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-striped table-hover">
-                    <thead class="table-dark">
+                    <thead class="thead-dark">
                         <tr>
-                            <th>شماره</th>
-                            <th>درخواست کننده</th>
-                            <th>تاریخ</th>
-                            <th>وضعیت</th>
-                            <th>تعداد اقلام</th>
-                            <th>مجموع مبلغ</th>
-                            <th>عملیات</th>
+                            <th scope="col">#</th>
+                            <th scope="col">شناسه سفارش</th>
+                            <th scope="col">درخواست کننده</th>
+                            <th scope="col">تاریخ سفارش</th>
+                            <th scope="col">تعداد اقلام</th>
+                            <th scope="col">وضعیت</th>
+                            <th scope="col">عملیات</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -72,7 +73,8 @@
                                 -
                                 {% endif %}
                             </td>
-                            <td>{{ order.order_date|date:"Y/m/d H:i" }}</td>
+                            <td>{{ order.order_date|to_jalali }}</td>
+                            <td>{{ order.items_count }}</td>
                             <td>
                                 {% if order.status == 'PENDING' %}
                                 <span class="badge bg-warning">در انتظار</span>
@@ -84,14 +86,6 @@
                                 <span class="badge bg-info">تحویل داده شده</span>
                                 {% elif order.status == 'RECEIVED' %}
                                 <span class="badge bg-primary">دریافت شده</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ order.items_count }}</td>
-                            <td>
-                                {% if order.total_price %}
-                                {{ order.total_price|call|floatformat:0 }} تومان
-                                {% else %}
-                                -
                                 {% endif %}
                             </td>
                             <td>

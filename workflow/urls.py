@@ -33,7 +33,6 @@ urlpatterns = [
     
     # Reports
     path('reports/', views.reports_dashboard, name='reports-dashboard'),
-    path('reports/inventory/', views.inventory_report, name='inventory-report'),
     path('reports/orders/', views.orders_report, name='orders-report'),
     path('reports/delivery/', views.delivery_report, name='delivery-report'),
     path('reports/financial/', views.financial_report, name='financial-report'),

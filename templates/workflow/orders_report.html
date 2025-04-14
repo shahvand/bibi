@@ -1,5 +1,6 @@
 {% extends 'workflow/base.html' %}
 {% load static %}
+{% load jdate_filters %}
 
 {% block title %}گزارش سفارشات - سیستم مدیریت انبار{% endblock %}
 
@@ -68,7 +69,7 @@
                             <td>{{ order.id }}</td>
                             <td>{{ order.requester.get_full_name|default:order.requester.username }}</td>
                             <td>{{ order.requester.branch_name|default:"-" }}</td>
-                            <td>{{ order.created_at|date:"Y/m/d" }}</td>
+                            <td>{{ order.created_at|to_jalali }}</td>
                             <td>{{ order.items.count }}</td>
                             <td>
                                 {% if order.status == 'PENDING' %}
@@ -89,7 +90,7 @@
                                 <span class="badge bg-success">دریافت شده</span>
                                 {% endif %}
                             </td>
-                            <td>{{ order.total_price|call|floatformat:0 }}</td>
+                            <td>{{ order.total_price|floatformat:0 }}</td>
                             <td>
                                 <div class="btn-group" role="group">
                                     <a href="{% url 'order-detail' order.id %}" class="btn btn-sm btn-info" title="مشاهده جزئیات">

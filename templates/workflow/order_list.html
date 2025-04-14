@@ -3,6 +3,15 @@
 
 {% block title %}لیست سفارش‌ها - سیستم مدیریت انبار{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css">
+<style>
+    .datepicker-plot-area {
+        font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -30,11 +39,13 @@
                 </div>
                 <div class="col-md-3">
                     <label for="date_from" class="form-label">از تاریخ</label>
-                    <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request.GET.date_from }}">
+                    <input type="text" name="date_from" id="date_from" class="form-control datepicker" value="{{ request.GET.date_from }}">
+                    <input type="hidden" id="date_from_hidden" name="date_from_hidden">
                 </div>
                 <div class="col-md-3">
                     <label for="date_to" class="form-label">تا تاریخ</label>
-                    <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request.GET.date_to }}">
+                    <input type="text" name="date_to" id="date_to" class="form-control datepicker" value="{{ request.GET.date_to }}">
+                    <input type="hidden" id="date_to_hidden" name="date_to_hidden">
                 </div>
                 <div class="col-md-3">
                     <label for="search" class="form-label">جستجو</label>
@@ -171,4 +182,53 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/persian-date@1.1.0/dist/persian-date.min.js"></script>
+<script src="https://unpkg.com/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize Persian DatePicker
+        $('.datepicker').persianDatepicker({
+            format: 'YYYY/MM/DD',
+            autoClose: true,
+            initialValueType: 'gregorian',
+            calendar: {
+                persian: {
+                    locale: 'fa'
+                }
+            },
+            onSelect: function(unix) {
+                // When a date is selected, set the hidden input value to ISO format for backend processing
+                var instance = $(this.model.inputElement).data("datepicker");
+                var selectedDate = new persianDate(unix);
+                var gregorianDate = selectedDate.toCalendar('gregorian').toLocale('en').format('YYYY-MM-DD');
+                
+                if ($(this.model.inputElement).attr('id') === 'date_from') {
+                    $('#date_from_hidden').val(gregorianDate);
+                } else if ($(this.model.inputElement).attr('id') === 'date_to') {
+                    $('#date_to_hidden').val(gregorianDate);
+                }
+            }
+        });
+        
+        // Form submission handling
+        $('form').on('submit', function(e) {
+            e.preventDefault();
+            var dateFrom = $('#date_from_hidden').val();
+            var dateTo = $('#date_to_hidden').val();
+            var status = $('#status').val();
+            var search = $('#search').val();
+            
+            var url = window.location.pathname + '?';
+            if (status) url += 'status=' + status + '&';
+            if (dateFrom) url += 'date_from=' + dateFrom + '&';
+            if (dateTo) url += 'date_to=' + dateTo + '&';
+            if (search) url += 'search=' + search;
+            
+            window.location.href = url;
+        });
+    });
+</script>
 {% endblock %} 

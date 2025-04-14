@@ -23,50 +23,22 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-4">
-                        <h5 class="border-bottom pb-2">اطلاعات پایه</h5>
+                        <h5 class="border-bottom pb-2">اطلاعات محصول</h5>
                         <div class="row mb-2">
                             <div class="col-4 fw-bold">نام محصول:</div>
-                            <div class="col-8">{{ product.name }}</div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-4 fw-bold">دسته‌بندی:</div>
-                            <div class="col-8">{{ product.category }}</div>
+                            <div class="col-8">{{ product.title }}</div>
                         </div>
                         <div class="row mb-2">
                             <div class="col-4 fw-bold">کد محصول:</div>
-                            <div class="col-8">{{ product.sku }}</div>
+                            <div class="col-8">{{ product.code }}</div>
                         </div>
                         <div class="row mb-2">
-                            <div class="col-4 fw-bold">توضیحات:</div>
-                            <div class="col-8">{{ product.description|default:"بدون توضیحات" }}</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="mb-4">
-                        <h5 class="border-bottom pb-2">اطلاعات موجودی</h5>
-                        <div class="row mb-2">
-                            <div class="col-4 fw-bold">موجودی فعلی:</div>
-                            <div class="col-8">
-                                {% if product.current_stock <= product.min_stock_level %}
-                                <span class="badge bg-danger">{{ product.current_stock|format_price }}</span>
-                                {% else %}
-                                <span class="badge bg-success">{{ product.current_stock|format_price }}</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-4 fw-bold">حداقل موجودی:</div>
-                            <div class="col-8">{{ product.min_stock_level|format_price }}</div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-4 fw-bold">واحد اندازه‌گیری:</div>
-                            <div class="col-8">{{ product.unit_of_measure }}</div>
+                            <div class="col-4 fw-bold">واحد:</div>
+                            <div class="col-8">{{ product.unit }}</div>
                         </div>
                         <div class="row mb-2">
                             <div class="col-4 fw-bold">قیمت واحد:</div>
-                            <div class="col-8">{{ product.unit_price|format_price }}</div>
+                            <div class="col-8">{{ product.price_per_unit|format_price }}</div>
                         </div>
                     </div>
                 </div>

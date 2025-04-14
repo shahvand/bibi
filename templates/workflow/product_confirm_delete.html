@@ -26,10 +26,11 @@
                             <strong>اطلاعات محصول</strong>
                         </div>
                         <div class="card-body">
-                            <p><strong>عنوان:</strong> {{ object.title }}</p>
+                            <p><strong>نام محصول:</strong> {{ object.title }}</p>
                             <p><strong>کد محصول:</strong> {{ object.code }}</p>
                             <p><strong>واحد:</strong> {{ object.unit }}</p>
-                            <p><strong>قیمت واحد:</strong> {{ object.price_per_unit|floatformat:0 }}</p>
+                            <p><strong>قیمت واحد:</strong> {{ object.price_per_unit|format_price }}</p>
+                            <p><strong>موجودی فعلی:</strong> {{ object.current_stock|format_price }}</p>
                         </div>
                     </div>
                 </div>

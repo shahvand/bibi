@@ -16,6 +16,12 @@ urlpatterns = [
     path('products/<int:pk>/update/', views.ProductUpdateView.as_view(), name='product-update'),
     path('products/<int:pk>/delete/', views.ProductDeleteView.as_view(), name='product-delete'),
     
+    # Units
+    path('units/', views.UnitListView.as_view(), name='unit-list'),
+    path('units/new/', views.UnitCreateView.as_view(), name='unit-create'),
+    path('units/<int:pk>/update/', views.UnitUpdateView.as_view(), name='unit-update'),
+    path('units/<int:pk>/delete/', views.UnitDeleteView.as_view(), name='unit-delete'),
+    
     # Drivers
     path('drivers/', views.DriverListView.as_view(), name='driver-list'),
     path('drivers/add/', views.DriverCreateView.as_view(), name='driver-create'),

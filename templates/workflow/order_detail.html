@@ -109,6 +109,8 @@
                             <th>مقدار درخواستی</th>
                             <th>مقدار تایید شده</th>
                             <th>واحد</th>
+                            <th>قیمت واحد</th>
+                            <th>قیمت کل</th>
                             <th>یادداشت</th>
                         </tr>
                     </thead>
@@ -118,17 +120,28 @@
                             <td>{{ forloop.counter }}</td>
                             <td>{{ item.product.title }}</td>
                             <td>{{ item.product.code }}</td>
-                            <td>{{ item.requested_quantity }}</td>
-                            <td>{% if item.approved_quantity %}{{ item.approved_quantity }}{% else %}-{% endif %}</td>
+                            <td>{{ item.requested_quantity|clean_number }}</td>
+                            <td>{% if item.approved_quantity %}{{ item.approved_quantity|clean_number }}{% else %}-{% endif %}</td>
                             <td>{{ item.product.unit }}</td>
+                            <td>{{ item.price_per_unit|format_price }}</td>
+                            <td>{{ item.total_price|format_price }}</td>
                             <td>{{ item.notes|default:"-" }}</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="text-center">هیچ کالایی در این سفارش موجود نیست.</td>
+                            <td colspan="9" class="text-center">هیچ کالایی در این سفارش موجود نیست.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
+                    {% if order.items.all %}
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="7" class="text-start fw-bold">جمع کل:</td>
+                            <td class="fw-bold">{{ order.total_price|format_price }}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                    {% endif %}
                 </table>
             </div>
             
@@ -149,17 +162,19 @@
                                             <th>محصول</th>
                                             <th>مقدار درخواستی</th>
                                             <th>مقدار تایید شده</th>
+                                            <th>قیمت واحد</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for item in order.items.all %}
                                         <tr>
                                             <td>{{ item.product.title }} ({{ item.product.code }})</td>
-                                            <td>{{ item.requested_quantity }} {{ item.product.unit }}</td>
+                                            <td>{{ item.requested_quantity|clean_number }} {{ item.product.unit }}</td>
                                             <td>
-                                                <input type="number" step="0.01" min="0" name="item_{{ item.id }}" 
-                                                       class="form-control" value="{{ item.requested_quantity }}">
+                                                <input type="number" step="any" min="0" name="item_{{ item.id }}" 
+                                                       class="form-control" value="{{ item.requested_quantity|clean_number }}">
                                             </td>
+                                            <td>{{ item.price_per_unit|format_price }}</td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>

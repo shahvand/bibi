@@ -9,11 +9,13 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.urls import reverse_lazy, reverse
 from django.db import transaction
 import decimal
+from django.db.models import Q
 
-from .models import User, Product, Order, OrderItem, Driver
+from .models import User, Product, Order, OrderItem, Driver, Unit
 from .forms import (
     UserRegisterForm, ProductForm, OrderItemForm, OrderItemFormSet, 
-    WarehouseOrderForm, WarehouseOrderItemForm, OrderReceiptForm, DriverForm
+    WarehouseOrderForm, WarehouseOrderItemForm, OrderReceiptForm, DriverForm,
+    UnitForm
 )
 
 # Utility functions
@@ -46,6 +48,19 @@ class ProductListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     template_name = 'workflow/product_list.html'
     context_object_name = 'products'
     ordering = ['title']
+    paginate_by = 10
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query = self.request.GET.get('q')
+        
+        if query:
+            queryset = queryset.filter(
+                Q(title__icontains=query) | 
+                Q(code__icontains=query)
+            )
+        
+        return queryset
     
     def test_func(self):
         return self.request.user.role in ['ADMIN', 'WAREHOUSE', 'ACCOUNTANT']
@@ -102,6 +117,20 @@ class DriverListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     template_name = 'workflow/driver_list.html'
     context_object_name = 'drivers'
     ordering = ['name']
+    paginate_by = 10
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query = self.request.GET.get('q')
+        
+        if query:
+            queryset = queryset.filter(
+                Q(name__icontains=query) | 
+                Q(phone__icontains=query) | 
+                Q(license_plate__icontains=query)
+            )
+        
+        return queryset
     
     def test_func(self):
         return self.request.user.role in ['ADMIN', 'WAREHOUSE']
@@ -432,8 +461,7 @@ def delivery_report(request):
             'driver': driver,
             'total_orders': total_orders,
             'delivered_orders': delivered_orders,
-            'pending_orders': pending_orders,
-            'delivery_rate': (delivered_orders / total_orders * 100) if total_orders > 0 else 0
+            'pending_orders': pending_orders
         })
     
     context = {
@@ -541,3 +569,64 @@ def generate_invoice_pdf(request, pk):
     
     response.write('\n'.join(lines))
     return response
+
+# Unit views
+class UnitListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = Unit
+    template_name = 'workflow/unit_list.html'
+    context_object_name = 'units'
+    ordering = ['name']
+    paginate_by = 10
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query = self.request.GET.get('q')
+        
+        if query:
+            queryset = queryset.filter(
+                Q(name__icontains=query) | 
+                Q(symbol__icontains=query)
+            )
+        
+        return queryset
+    
+    def test_func(self):
+        return self.request.user.role in ['ADMIN', 'WAREHOUSE']
+
+class UnitCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = Unit
+    form_class = UnitForm
+    template_name = 'workflow/unit_form.html'
+    success_url = reverse_lazy('unit-list')
+    
+    def test_func(self):
+        return self.request.user.role in ['ADMIN', 'WAREHOUSE']
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'واحد با موفقیت ایجاد شد!')
+        return super().form_valid(form)
+
+class UnitUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Unit
+    form_class = UnitForm
+    template_name = 'workflow/unit_form.html'
+    success_url = reverse_lazy('unit-list')
+    
+    def test_func(self):
+        return self.request.user.role in ['ADMIN', 'WAREHOUSE']
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'واحد با موفقیت به‌روزرسانی شد!')
+        return super().form_valid(form)
+
+class UnitDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Unit
+    template_name = 'workflow/unit_confirm_delete.html'
+    success_url = reverse_lazy('unit-list')
+    
+    def test_func(self):
+        return self.request.user.role in ['ADMIN', 'WAREHOUSE']
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'واحد با موفقیت حذف شد.')
+        return super().delete(request, *args, **kwargs)

@@ -1,0 +1,167 @@
+{% extends 'workflow/base.html' %}
+
+{% block title %}داشبورد - سیستم مدیریت انبار{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">داشبورد</h2>
+    
+    <div class="row">
+        {% if user.role == 'REQUESTER' %}
+            <!-- داشبورد درخواست کننده -->
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">سفارش‌های در انتظار</h5>
+                        <p class="display-4">{{ pending_orders }}</p>
+                        <a href="{% url 'order-list' %}?status=PENDING" class="btn btn-primary">مشاهده سفارش‌ها</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">سفارش‌های تایید شده</h5>
+                        <p class="display-4">{{ approved_orders }}</p>
+                        <a href="{% url 'order-list' %}?status=APPROVED" class="btn btn-success">مشاهده سفارش‌ها</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">سفارش‌های تحویل داده شده</h5>
+                        <p class="display-4">{{ delivered_orders }}</p>
+                        <a href="{% url 'order-list' %}?status=DELIVERED" class="btn btn-info">مشاهده سفارش‌ها</a>
+                    </div>
+                </div>
+            </div>
+        {% elif user.role == 'WAREHOUSE' %}
+            <!-- داشبورد انباردار -->
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">در انتظار تایید</h5>
+                        <p class="display-4">{{ pending_approvals }}</p>
+                        <a href="{% url 'order-list' %}?status=PENDING" class="btn btn-warning">مشاهده سفارش‌ها</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">سفارش‌های تایید شده</h5>
+                        <p class="display-4">{{ approved_orders }}</p>
+                        <a href="{% url 'order-list' %}?status=APPROVED" class="btn btn-success">مشاهده سفارش‌ها</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">مدیریت محصولات</h5>
+                        <p><i class="fas fa-boxes fa-3x"></i></p>
+                        <a href="{% url 'product-list' %}" class="btn btn-primary">مشاهده محصولات</a>
+                    </div>
+                </div>
+            </div>
+        {% elif user.role == 'ACCOUNTANT' or user.role == 'ADMIN' %}
+            <!-- داشبورد حسابدار -->
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">کل سفارش‌ها</h5>
+                        <p class="display-4">{{ total_orders }}</p>
+                        <a href="{% url 'order-list' %}" class="btn btn-primary">مشاهده همه</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">سفارش‌های تکمیل شده</h5>
+                        <p class="display-4">{{ received_orders }}</p>
+                        <a href="{% url 'order-list' %}?status=RECEIVED" class="btn btn-success">مشاهده سفارش‌ها</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">گزارش‌ها</h5>
+                        <p><i class="fas fa-chart-bar fa-3x"></i></p>
+                        <a href="{% url 'reports-dashboard' %}" class="btn btn-info">مشاهده گزارش‌ها</a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- سفارش‌های اخیر -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h4>سفارش‌های اخیر</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>شناسه</th>
+                            <th>درخواست کننده</th>
+                            <th>تاریخ</th>
+                            <th>وضعیت</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                            <tr>
+                                <td>{{ order.id }}</td>
+                                <td>{{ order.requester.username }}</td>
+                                <td>{{ order.order_date|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    {% if order.status == 'PENDING' %}
+                                        <span class="badge bg-warning">در انتظار</span>
+                                    {% elif order.status == 'APPROVED' %}
+                                        <span class="badge bg-success">تایید شده</span>
+                                    {% elif order.status == 'REJECTED' %}
+                                        <span class="badge bg-danger">رد شده</span>
+                                    {% elif order.status == 'DELIVERED' %}
+                                        <span class="badge bg-info">تحویل داده شده</span>
+                                    {% elif order.status == 'RECEIVED' %}
+                                        <span class="badge bg-primary">دریافت شده</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'order-detail' order.id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> مشاهده
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">سفارشی یافت نشد.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'order-list' %}" class="btn btn-outline-primary">مشاهده همه سفارش‌ها</a>
+            {% if user.role == 'REQUESTER' %}
+                <a href="{% url 'order-create' %}" class="btn btn-primary float-start">
+                    <i class="fas fa-plus-circle"></i> سفارش جدید
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,30 @@
+{% extends 'workflow/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}ثبت نام - سیستم مدیریت انبار{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mt-5">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">ثبت نام</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary">ثبت نام</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <p class="mb-0">قبلاً ثبت نام کرده‌اید؟ <a href="{% url 'login' %}">وارد شوید</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

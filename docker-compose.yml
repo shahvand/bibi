@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   web:
@@ -10,7 +9,7 @@ services:
       - db
     environment:
       - DEBUG=True
-      - SECRET_KEY=your_secure_secret_key_change_in_production
+      - SECRET_KEY=qwerqwew4c5w45@##545454
       - DB_NAME=bibi
       - DB_USER=bibi_user
       - DB_PASSWORD=bibi_password
@@ -30,8 +29,8 @@ services:
     environment:
       - MYSQL_DATABASE=bibi
       - MYSQL_USER=bibi_user
-      - MYSQL_PASSWORD=bibi_password
-      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_PASSWORD=coweorw@#k
+      - MYSQL_ROOT_PASSWORD=rAdmin12@x
     volumes:
       - mysql_data:/var/lib/mysql
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci

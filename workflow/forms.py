@@ -134,29 +134,63 @@ class OrderItemEditForm(forms.ModelForm):
     
     class Meta:
         model = OrderItem
-        fields = ['approved_quantity', 'notes', 'is_rejected']
+        fields = ['requested_quantity', 'approved_quantity', 'product', 'notes', 'is_rejected']
         widgets = {
+            'requested_quantity': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
             'approved_quantity': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'دلیل رد یا تغییر تعداد را بنویسید'}),
+            'product': forms.Select(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'توضیحات تکمیلی...'}),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # قالب‌بندی مقادیر بدون نقطه اعشار و صفرهای اضافی در حالت ویرایش
-        if self.instance and self.instance.pk:
-            if self.instance.approved_quantity:
-                self.initial['approved_quantity'] = format_price_input(self.instance.approved_quantity)
-            # اگر تعداد تایید شده صفر باشد، آیتم را به عنوان رد شده علامت می‌زنیم
-            if self.instance.approved_quantity == 0:
-                self.initial['is_rejected'] = True
+        
+        # بررسی وضعیت سفارش و تنظیم فرم بر اساس آن
+        is_pending = False
+        if self.instance and self.instance.pk and self.instance.order:
+            is_pending = self.instance.order.status == 'PENDING'
+        
+        # در حالت PENDING، مقدار درخواستی را نمایش می‌دهیم، در غیر این صورت مقدار تایید شده را
+        if is_pending:
+            self.fields['approved_quantity'].widget = forms.HiddenInput()
+            self.fields['is_rejected'].widget = forms.HiddenInput()
+            
+            # تغییر برچسب‌ها برای حالت PENDING
+            self.fields['requested_quantity'].label = 'مقدار'
+            self.fields['notes'].widget.attrs['placeholder'] = 'توضیحات تکمیلی...'
+            
+            # محصول فقط برای آیتم‌های جدید (بدون id) قابل انتخاب است
+            if self.instance.pk:
+                self.fields['product'].widget.attrs['readonly'] = True
+                self.fields['product'].disabled = True
+        else:
+            # برای سفارش‌های تایید شده
+            self.fields['requested_quantity'].widget = forms.HiddenInput()
+            self.fields['product'].widget = forms.HiddenInput()
+            
+            # تغییر برچسب‌ها برای حالت APPROVED
+            self.fields['approved_quantity'].label = 'مقدار تایید شده'
+            self.fields['notes'].widget.attrs['placeholder'] = 'دلیل رد یا تغییر تعداد را بنویسید'
+            
+            # قالب‌بندی مقادیر بدون نقطه اعشار و صفرهای اضافی در حالت ویرایش
+            if self.instance and self.instance.pk:
+                if self.instance.approved_quantity:
+                    self.initial['approved_quantity'] = format_price_input(self.instance.approved_quantity)
+                # اگر تعداد تایید شده صفر باشد، آیتم را به عنوان رد شده علامت می‌زنیم
+                if self.instance.approved_quantity == 0:
+                    self.initial['is_rejected'] = True
     
     def save(self, commit=True):
-        """ذخیره تغییرات با در نظر گرفتن رد کردن آیتم"""
+        """ذخیره تغییرات با در نظر گرفتن رد کردن آیتم و وضعیت سفارش"""
         item = super().save(commit=False)
         
-        # اگر آیتم رد شده باشد، تعداد تایید شده را صفر می‌کنیم
-        if self.cleaned_data.get('is_rejected', False):
-            item.approved_quantity = 0
+        # در حالت PENDING، مقدار تایید شده را برابر با مقدار درخواستی قرار می‌دهیم
+        if item.order.status == 'PENDING':
+            item.approved_quantity = item.requested_quantity
+        else:
+            # در حالت APPROVED، اگر آیتم رد شده باشد، تعداد تایید شده را صفر می‌کنیم
+            if self.cleaned_data.get('is_rejected', False):
+                item.approved_quantity = 0
         
         if commit:
             item.save()

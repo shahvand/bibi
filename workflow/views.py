@@ -441,12 +441,13 @@ def edit_order_items(request, pk):
         messages.error(request, 'این سفارش به راننده تحویل داده شده و دیگر قابل ویرایش نیست.')
         return redirect('order-detail', pk=order.pk)
     
-    # تنظیم فرم‌ست برای آیتم‌های سفارش
+    # تنظیم فرم‌ست برای آیتم‌های سفارش - امکان اضافه و حذف آیتم فقط در حالت PENDING
+    can_add_remove = order.status == 'PENDING'
     OrderItemFormSet = inlineformset_factory(
         Order, OrderItem, 
         form=OrderItemEditForm,
-        extra=0,
-        can_delete=False
+        extra=3 if can_add_remove else 0,
+        can_delete=can_add_remove
     )
     
     if request.method == 'POST':
@@ -461,18 +462,20 @@ def edit_order_items(request, pk):
                 # ذخیره تغییرات آیتم‌ها با بررسی آیتم‌های رد شده
                 formset.save()
                 
-                # بررسی اگر تمام آیتم‌ها رد شده باشند، سفارش به وضعیت رد شده تغییر می‌کند
-                all_items_rejected = all(
-                    item.approved_quantity == 0 
-                    for item in order.items.all()
-                )
+                # در حالت PENDING نیازی به بررسی رد شدن نیست
+                if order.status == 'APPROVED':
+                    # بررسی اگر تمام آیتم‌ها رد شده باشند، سفارش به وضعیت رد شده تغییر می‌کند
+                    all_items_rejected = all(
+                        item.approved_quantity == 0 
+                        for item in order.items.all()
+                    )
+                    
+                    if all_items_rejected:
+                        order.status = 'REJECTED'
+                        order.save()
+                        messages.success(request, 'سفارش به دلیل رد تمام آیتم‌ها لغو شد.')
                 
-                if all_items_rejected:
-                    order.status = 'REJECTED'
-                    order.save()
-                    messages.success(request, 'سفارش به دلیل رد تمام آیتم‌ها لغو شد.')
-                else:
-                    messages.success(request, 'تغییرات سفارش با موفقیت ذخیره شد.')
+                messages.success(request, 'تغییرات سفارش با موفقیت ذخیره شد.')
                 
             return redirect('order-detail', pk=order.pk)
         else:
@@ -485,6 +488,7 @@ def edit_order_items(request, pk):
         'order': order,
         'order_form': order_form,
         'formset': formset,
+        'can_add_remove': can_add_remove,
     })
 
 # Report views

@@ -58,8 +58,12 @@
                             <div class="card-body">
                                 <div class="alert alert-info">
                                     <i class="fas fa-info-circle"></i> 
+                                    {% if order.status == 'PENDING' %}
+                                    شما می‌توانید اقلام سفارش را تغییر دهید، آیتم‌ها را حذف کنید یا آیتم‌های جدید اضافه کنید.
+                                    {% else %}
                                     شما می‌توانید مقادیر تایید شده محصولات را تغییر دهید یا هر آیتم را با علامت‌گذاری گزینه "رد شده" رد کنید.
-                                    لطفاً دلیل تغییرات خود را در بخش توضیحات وارد کنید.
+                                    {% endif %}
+                                    لطفاً توضیحات خود را در بخش یادداشت‌ها وارد کنید.
                                 </div>
                                 {{ order_form.notes|as_crispy_field }}
                             </div>
@@ -77,28 +81,52 @@
                                 <th>#</th>
                                 <th>محصول</th>
                                 <th>کد</th>
+                                {% if order.status == 'PENDING' %}
+                                <th>مقدار</th>
+                                {% else %}
                                 <th>مقدار درخواستی</th>
                                 <th>مقدار تایید شده</th>
+                                <th>رد کردن</th>
+                                {% endif %}
                                 <th>واحد</th>
                                 <th>قیمت واحد</th>
-                                <th>رد کردن</th>
                                 <th>توضیحات</th>
+                                {% if can_add_remove %}
+                                <th>حذف</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody>
                             {% for form in formset %}
                                 {{ form.id }}
+                                {% if form.instance.product %}
                                 <tr class="{% if form.instance.approved_quantity == 0 %}table-danger{% endif %}">
                                     <td>{{ forloop.counter }}</td>
-                                    <td>{{ form.instance.product.title }}</td>
-                                    <td>{{ form.instance.product.code }}</td>
+                                    <td>
+                                        {{ form.product }}
+                                        {{ form.product.errors }}
+                                        {% if form.instance.product %}
+                                            {{ form.instance.product.title }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if form.instance.product %}
+                                            {{ form.instance.product.code }}
+                                        {% endif %}
+                                    </td>
+                                    
+                                    {% if order.status == 'PENDING' %}
+                                    <td>
+                                        {{ form.requested_quantity }}
+                                        {{ form.requested_quantity.errors }}
+                                        {{ form.approved_quantity }}
+                                    </td>
+                                    {% else %}
                                     <td>{{ form.instance.requested_quantity|clean_number }}</td>
                                     <td>
                                         {{ form.approved_quantity }}
                                         {{ form.approved_quantity.errors }}
                                     </td>
-                                    <td>{% if form.instance.product.unit_ref %}{{ form.instance.product.unit_ref.symbol }}{% else %}{{ form.instance.product.unit }}{% endif %}</td>
-                                    <td>{{ form.instance.price_per_unit|format_price }}</td>
                                     <td>
                                         <div class="form-check">
                                             {{ form.is_rejected }}
@@ -107,11 +135,50 @@
                                             </label>
                                         </div>
                                     </td>
+                                    {% endif %}
+                                    
+                                    <td>{% if form.instance.product.unit_ref %}{{ form.instance.product.unit_ref.symbol }}{% else %}{{ form.instance.product.unit }}{% endif %}</td>
+                                    <td>{{ form.instance.price_per_unit|format_price }}</td>
                                     <td>
                                         {{ form.notes }}
                                         {{ form.notes.errors }}
                                     </td>
+                                    {% if can_add_remove %}
+                                    <td>
+                                        {{ form.DELETE }}
+                                        {% if not forloop.first %}
+                                        <label for="{{ form.DELETE.id_for_label }}" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </label>
+                                        {% endif %}
+                                    </td>
+                                    {% endif %}
                                 </tr>
+                                {% else %}
+                                <!-- فرم های خالی برای اضافه کردن آیتم جدید -->
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        {{ form.product }}
+                                        {{ form.product.errors }}
+                                    </td>
+                                    <td>-</td>
+                                    <td>
+                                        {{ form.requested_quantity }}
+                                        {{ form.requested_quantity.errors }}
+                                        {{ form.approved_quantity }}
+                                    </td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>
+                                        {{ form.notes }}
+                                        {{ form.notes.errors }}
+                                    </td>
+                                    <td>
+                                        {{ form.DELETE }}
+                                    </td>
+                                </tr>
+                                {% endif %}
                             {% endfor %}
                         </tbody>
                     </table>

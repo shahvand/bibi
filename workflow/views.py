@@ -3,13 +3,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.forms import modelformset_factory, inlineformset_factory
-from django.http import HttpResponseForbidden, HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseForbidden, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.db import transaction
 import decimal
 from django.db.models import Q
+from .templatetags.workflow_filters import format_price
 
 from .models import User, Product, Order, OrderItem, Driver, Unit
 from .forms import (
@@ -446,7 +447,7 @@ def edit_order_items(request, pk):
     OrderItemFormSet = inlineformset_factory(
         Order, OrderItem, 
         form=OrderItemEditForm,
-        extra=3 if can_add_remove else 0,
+        extra=1,  # همیشه یک ردیف خالی برای اضافه کردن
         can_delete=can_add_remove
     )
     
@@ -490,6 +491,7 @@ def edit_order_items(request, pk):
         'formset': formset,
         'can_add_remove': can_add_remove,
         'products': Product.objects.all().order_by('title'),
+        'all_units': Unit.objects.all(),  # اضافه کردن تمام واحدهای اندازه‌گیری
     })
 
 # Report views
@@ -753,3 +755,27 @@ class UnitDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'واحد با موفقیت حذف شد.')
         return super().delete(request, *args, **kwargs)
+
+@login_required
+def get_product_info(request):
+    """API برای دریافت اطلاعات محصول"""
+    product_id = request.GET.get('product_id')
+    if not product_id:
+        return JsonResponse({'success': False, 'error': 'شناسه محصول ارسال نشده است'})
+    
+    try:
+        product = Product.objects.get(pk=product_id)
+        
+        # تهیه اطلاعات محصول
+        unit = product.unit_ref.symbol if product.unit_ref else product.unit
+        price_formatted = format_price(product.price_per_unit)
+        
+        return JsonResponse({
+            'success': True,
+            'code': product.code,
+            'unit': unit,
+            'price': float(product.price_per_unit),
+            'price_formatted': price_formatted
+        })
+    except Product.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'محصول یافت نشد'})

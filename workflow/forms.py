@@ -127,19 +127,17 @@ class RequesterOrderEditForm(forms.ModelForm):
         }
 
 class OrderItemEditForm(forms.ModelForm):
-    """فرم ویرایش آیتم‌های سفارش توسط درخواست کننده"""
-    
-    is_rejected = forms.BooleanField(required=False, label='رد شده', 
-                                    widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))
+    is_rejected = forms.BooleanField(required=False, label="رد این آیتم", 
+                                   widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))
     
     class Meta:
         model = OrderItem
-        fields = ['requested_quantity', 'approved_quantity', 'product', 'notes', 'is_rejected']
+        fields = ['product', 'requested_quantity', 'approved_quantity', 'notes', 'is_rejected']
         widgets = {
-            'requested_quantity': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
-            'approved_quantity': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
-            'product': forms.Select(attrs={'class': 'form-control'}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'توضیحات تکمیلی...'}),
+            'product': forms.Select(attrs={'class': 'form-control product-select'}),
+            'requested_quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'step': '1'}),
+            'approved_quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '1'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control notes-field', 'rows': '1', 'style': 'height: auto; min-height: 38px;', 'placeholder': 'توضیحات تکمیلی...'}),
         }
     
     def __init__(self, *args, **kwargs):

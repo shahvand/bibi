@@ -113,9 +113,6 @@
                                     <td>
                                         {{ form.product }}
                                         {{ form.product.errors }}
-                                        {% if form.instance.product %}
-                                            {{ form.instance.product.title }}
-                                        {% endif %}
                                     </td>
                                     <td>
                                         {% if form.instance.product %}
@@ -148,7 +145,11 @@
                                     <td>{% if form.instance.product.unit_ref %}{{ form.instance.product.unit_ref.symbol }}{% else %}{{ form.instance.product.unit }}{% endif %}</td>
                                     <td>{{ form.instance.price_per_unit|format_price }}</td>
                                     <td>
-                                        {{ form.notes }}
+                                        <textarea name="{{ form.notes.html_name }}" 
+                                                  id="{{ form.notes.auto_id }}" 
+                                                  class="form-control notes-field" rows="1" 
+                                                  style="height: auto; min-height: 38px;"
+                                                  placeholder="توضیحات تکمیلی..."></textarea>
                                         {{ form.notes.errors }}
                                     </td>
                                     {% if can_add_remove %}
@@ -179,14 +180,16 @@
                                                id="{{ form.requested_quantity.auto_id }}" 
                                                class="form-control" min="1" step="1" value="1">
                                         {{ form.requested_quantity.errors }}
-                                        {{ form.approved_quantity }}
+                                        <input type="hidden" name="{{ form.approved_quantity.html_name }}" 
+                                               id="{{ form.approved_quantity.auto_id }}" value="1">
                                     </td>
                                     <td class="product-unit">-</td>
                                     <td class="product-price">-</td>
                                     <td>
                                         <textarea name="{{ form.notes.html_name }}" 
                                                   id="{{ form.notes.auto_id }}" 
-                                                  class="form-control" rows="1" 
+                                                  class="form-control notes-field" rows="1" 
+                                                  style="height: auto; min-height: 38px;"
                                                   placeholder="توضیحات تکمیلی..."></textarea>
                                         {{ form.notes.errors }}
                                     </td>
@@ -229,6 +232,8 @@
             </select>
         </td>
         <td class="product-code">-</td>
+        
+        {% if order.status == 'PENDING' %}
         <td>
             <input type="number" name="__PREFIX__-requested_quantity" 
                    id="id___PREFIX__-requested_quantity" 
@@ -236,20 +241,42 @@
             <input type="hidden" name="__PREFIX__-approved_quantity" 
                    id="id___PREFIX__-approved_quantity" value="1">
         </td>
-        <td class="product-unit">-</td>
+        {% else %}
+        <td>1</td>
+        <td>
+            <input type="number" name="__PREFIX__-approved_quantity" 
+                   id="id___PREFIX__-approved_quantity" 
+                   class="form-control" min="0" step="1" value="1">
+        </td>
+        <td>
+            <div class="form-check">
+                <input type="checkbox" name="__PREFIX__-is_rejected" 
+                       id="id___PREFIX__-is_rejected" 
+                       class="form-check-input">
+                <label class="form-check-label" for="id___PREFIX__-is_rejected">
+                    رد این آیتم
+                </label>
+            </div>
+        </td>
+        {% endif %}
+        
+        <td class="product-unit">عدد</td>
         <td class="product-price">-</td>
         <td>
             <textarea name="__PREFIX__-notes" 
                      id="id___PREFIX__-notes" 
-                     class="form-control" rows="1" 
+                     class="form-control notes-field" rows="1" 
+                     style="height: auto; min-height: 38px;"
                      placeholder="توضیحات تکمیلی..."></textarea>
         </td>
+        {% if can_add_remove %}
         <td>
             <input type="checkbox" name="__PREFIX__-DELETE" id="id___PREFIX__-DELETE" style="display:none;">
             <button type="button" class="btn btn-sm btn-danger delete-row">
                 <i class="fas fa-trash"></i>
             </button>
         </td>
+        {% endif %}
     </tr>
 </template>
 {% endblock %}
@@ -257,6 +284,9 @@
 {% block extra_js %}
 <script>
     $(document).ready(function() {
+        // تنظیم ارتفاع همه فیلدهای توضیحات به یک خط
+        $('.notes-field').css('height', 'auto').css('min-height', '38px');
+        
         // بررسی وضعیت رد شدن آیتم‌ها و غیرفعال کردن فیلد مقدار تایید شده
         $('.form-check-input').change(function() {
             var isRejected = $(this).prop('checked');
@@ -284,26 +314,50 @@
 
         // تابع برای بارگذاری اطلاعات محصول انتخاب شده
         function setupProductSelect(productSelect) {
+            // تعریف متغیرهای محصولات به صورت آبجکت جاوااسکریپت
+            var productsData = {
+                {% for p in products %}
+                "{{ p.id }}": {
+                    id: "{{ p.id }}",
+                    code: "{{ p.code }}",
+                    unit: "{% if p.unit_ref %}{{ p.unit_ref.symbol }}{% else %}{{ p.unit }}{% endif %}",
+                    price: "{{ p.price_per_unit|format_price }}"
+                }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            };
+            
             productSelect.change(function() {
                 var selectedOption = $(this).find('option:selected');
                 var row = $(this).closest('tr');
                 
                 if (selectedOption.val()) {
                     var productId = selectedOption.val();
-                    var productName = selectedOption.text();
+                    var productData = productsData[productId];
                     
-                    // اینجا می‌توانیم یک درخواست AJAX برای دریافت اطلاعات بیشتر محصول انجام دهیم
-                    // فعلاً فقط کد را از متن انتخاب شده استخراج می‌کنیم
-                    var codeMatch = productName.match(/\(([^)]+)\)/);
-                    var code = codeMatch ? codeMatch[1] : '-';
-                    
-                    row.find('.product-code').text(code);
+                    if (productData) {
+                        row.find('.product-code').text(productData.code);
+                        row.find('.product-unit').text(productData.unit);
+                        row.find('.product-price').text(productData.price);
+                    } else {
+                        var productName = selectedOption.text();
+                        var codeMatch = productName.match(/\(([^)]+)\)/);
+                        var code = codeMatch ? codeMatch[1] : '-';
+                        
+                        row.find('.product-code').text(code);
+                        row.find('.product-unit').text('عدد');
+                        row.find('.product-price').text('-');
+                    }
                 } else {
                     row.find('.product-code').text('-');
                     row.find('.product-unit').text('-');
                     row.find('.product-price').text('-');
                 }
             });
+            
+            // برای اطمینان از به‌روزرسانی مقادیر اولیه
+            if (productSelect.val()) {
+                productSelect.trigger('change');
+            }
         }
         
         // برای همه سلکت‌های موجود
@@ -330,24 +384,31 @@
         // دکمه اضافه کردن آیتم جدید
         $('#addItemBtn').click(function() {
             var totalForms = parseInt($('#id_orderitem_set-TOTAL_FORMS').val());
+            var emptyRow = $('#items-table .empty-form-row').last().clone();
             
-            // استفاده از تمپلیت HTML برای ردیف جدید
-            var template = document.getElementById('emptyRowTemplate').innerHTML;
-            var newRow = template.replace(/__PREFIX__/g, totalForms);
+            // به‌روزرسانی شناسه‌ها و نام‌های فیلدها
+            emptyRow.find('*[name], *[id]').each(function() {
+                var name = $(this).attr('name');
+                var id = $(this).attr('id');
+                
+                if (name) {
+                    name = name.replace(/_\d+_/g, '_' + totalForms + '_');
+                    name = name.replace(/-\d+-/g, '-' + totalForms + '-');
+                    $(this).attr('name', name);
+                }
+                
+                if (id) {
+                    id = id.replace(/_\d+_/g, '_' + totalForms + '_');
+                    id = id.replace(/-\d+-/g, '-' + totalForms + '-');
+                    $(this).attr('id', id);
+                }
+            });
             
-            // تبدیل به المنت DOM
-            var tempDiv = document.createElement('div');
-            tempDiv.innerHTML = newRow;
-            var newRowElement = tempDiv.firstElementChild;
+            // افزودن به جدول
+            $('#items-table tbody').append(emptyRow);
             
-            // اضافه کردن به جدول
-            $('#items-table tbody').append(newRowElement);
-            
-            // راه‌اندازی سلکت محصول
-            setupProductSelect($(newRowElement).find('.product-select'));
-            
-            // راه‌اندازی دکمه حذف
-            $(newRowElement).find('.delete-row').click(function() {
+            // اضافه کردن رویدادها
+            emptyRow.find('.delete-row').click(function() {
                 var row = $(this).closest('tr');
                 var deleteCheckbox = row.find('input[type="checkbox"][name$="-DELETE"]');
                 
@@ -355,29 +416,43 @@
                 row.hide();
                 
                 updateRowNumbers();
+            });
+            
+            emptyRow.find('.form-check-input').change(function() {
+                var isRejected = $(this).prop('checked');
+                var quantityField = $(this).closest('tr').find('input[type="number"]');
                 
-                // جلوگیری از حذف تمام آیتم‌ها
-                if ($('#items-table tbody tr:visible').length === 0) {
-                    $('#addItemBtn').click(); // اضافه کردن یک ردیف جدید
+                if (isRejected) {
+                    quantityField.prop('disabled', true);
+                    quantityField.val(0);
+                    $(this).closest('tr').addClass('table-danger');
+                } else {
+                    quantityField.prop('disabled', false);
+                    $(this).closest('tr').removeClass('table-danger');
                 }
             });
             
             // بروزرسانی تعداد فرم‌ها
             $('#id_orderitem_set-TOTAL_FORMS').val(totalForms + 1);
             
+            // پاکسازی مقادیر
+            emptyRow.find('input[type="text"], input[type="number"]').val('');
+            emptyRow.find('textarea').val('');
+            emptyRow.find('select').val('');
+            
             // بروزرسانی شماره ردیف‌ها
             updateRowNumbers();
             
             // اسکرول به ردیف جدید
             $('html, body').animate({
-                scrollTop: $(newRowElement).offset().top - 100
+                scrollTop: emptyRow.offset().top - 100
             }, 500);
         });
         
         // بررسی تعداد ردیف‌های خالی در ابتدای بارگذاری
         var emptyRows = $('.empty-form-row').length;
-        if (emptyRows === 0 && {% if can_add_remove %}true{% else %}false{% endif %}) {
-            $('#addItemBtn').click(); // اضافه کردن یک ردیف خالی اگر وجود ندارد
+        if (emptyRows === 0 && {% if can_add_remove %}true{% else %}false{% endif %} && $('#items-table tbody tr:visible').length === 0) {
+            $('#addItemBtn').click(); // اضافه کردن یک ردیف خالی فقط اگر هیچ ردیفی نداریم
         }
         
         // بروزرسانی شماره ردیف‌ها در ابتدای بارگذاری

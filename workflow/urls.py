@@ -44,4 +44,7 @@ urlpatterns = [
     path('reports/orders/', views.orders_report, name='orders-report'),
     path('reports/delivery/', views.delivery_report, name='delivery-report'),
     path('reports/financial/', views.financial_report, name='financial-report'),
+    
+    # API endpoints
+    path('products/api/get-product-info/', views.get_product_info, name='get-product-info'),
 ] 

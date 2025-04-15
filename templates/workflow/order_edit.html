@@ -15,7 +15,7 @@
             </a>
         </div>
         <div class="card-body">
-            <form method="post">
+            <form method="post" id="orderForm">
                 {% csrf_token %}
                 
                 <div class="row mb-4">
@@ -71,11 +71,18 @@
                     </div>
                 </div>
                 
-                <h5>اقلام سفارش</h5>
+                <div class="d-flex justify-content-between mb-2">
+                    <h5>اقلام سفارش</h5>
+                    {% if can_add_remove %}
+                    <button type="button" id="addItemBtn" class="btn btn-success">
+                        <i class="fas fa-plus"></i> افزودن آیتم جدید
+                    </button>
+                    {% endif %}
+                </div>
                 
                 {{ formset.management_form }}
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-striped table-hover" id="items-table">
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -100,7 +107,8 @@
                             {% for form in formset %}
                                 {{ form.id }}
                                 {% if form.instance.product %}
-                                <tr class="{% if form.instance.approved_quantity == 0 %}table-danger{% endif %}">
+                                <!-- ردیف های موجود -->
+                                <tr class="{% if form.instance.approved_quantity == 0 %}table-danger{% endif %} item-row">
                                     <td>{{ forloop.counter }}</td>
                                     <td>
                                         {{ form.product }}
@@ -146,36 +154,47 @@
                                     {% if can_add_remove %}
                                     <td>
                                         {{ form.DELETE }}
-                                        {% if not forloop.first %}
-                                        <label for="{{ form.DELETE.id_for_label }}" class="btn btn-sm btn-danger">
+                                        <button type="button" class="btn btn-sm btn-danger delete-row">
                                             <i class="fas fa-trash"></i>
-                                        </label>
-                                        {% endif %}
+                                        </button>
                                     </td>
                                     {% endif %}
                                 </tr>
                                 {% else %}
                                 <!-- فرم های خالی برای اضافه کردن آیتم جدید -->
-                                <tr>
+                                <tr class="empty-form-row item-row">
                                     <td>{{ forloop.counter }}</td>
                                     <td>
-                                        {{ form.product }}
+                                        <select name="{{ form.product.html_name }}" id="{{ form.product.auto_id }}" class="form-control product-select">
+                                            <option value="">-- انتخاب محصول --</option>
+                                            {% for product in products %}
+                                            <option value="{{ product.id }}">{{ product.title }} ({{ product.code }})</option>
+                                            {% endfor %}
+                                        </select>
                                         {{ form.product.errors }}
                                     </td>
-                                    <td>-</td>
+                                    <td class="product-code">-</td>
                                     <td>
-                                        {{ form.requested_quantity }}
+                                        <input type="number" name="{{ form.requested_quantity.html_name }}" 
+                                               id="{{ form.requested_quantity.auto_id }}" 
+                                               class="form-control" min="1" step="1" value="1">
                                         {{ form.requested_quantity.errors }}
                                         {{ form.approved_quantity }}
                                     </td>
-                                    <td>-</td>
-                                    <td>-</td>
+                                    <td class="product-unit">-</td>
+                                    <td class="product-price">-</td>
                                     <td>
-                                        {{ form.notes }}
+                                        <textarea name="{{ form.notes.html_name }}" 
+                                                  id="{{ form.notes.auto_id }}" 
+                                                  class="form-control" rows="1" 
+                                                  placeholder="توضیحات تکمیلی..."></textarea>
                                         {{ form.notes.errors }}
                                     </td>
                                     <td>
                                         {{ form.DELETE }}
+                                        <button type="button" class="btn btn-sm btn-danger delete-row">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </td>
                                 </tr>
                                 {% endif %}
@@ -196,6 +215,43 @@
         </div>
     </div>
 </div>
+
+<!-- Template for new rows -->
+<template id="emptyRowTemplate">
+    <tr class="empty-form-row item-row">
+        <td class="row-number">0</td>
+        <td>
+            <select name="__PREFIX__-product" id="id___PREFIX__-product" class="form-control product-select">
+                <option value="">-- انتخاب محصول --</option>
+                {% for product in products %}
+                <option value="{{ product.id }}">{{ product.title }} ({{ product.code }})</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td class="product-code">-</td>
+        <td>
+            <input type="number" name="__PREFIX__-requested_quantity" 
+                   id="id___PREFIX__-requested_quantity" 
+                   class="form-control" min="1" step="1" value="1">
+            <input type="hidden" name="__PREFIX__-approved_quantity" 
+                   id="id___PREFIX__-approved_quantity" value="1">
+        </td>
+        <td class="product-unit">-</td>
+        <td class="product-price">-</td>
+        <td>
+            <textarea name="__PREFIX__-notes" 
+                     id="id___PREFIX__-notes" 
+                     class="form-control" rows="1" 
+                     placeholder="توضیحات تکمیلی..."></textarea>
+        </td>
+        <td>
+            <input type="checkbox" name="__PREFIX__-DELETE" id="id___PREFIX__-DELETE" style="display:none;">
+            <button type="button" class="btn btn-sm btn-danger delete-row">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    </tr>
+</template>
 {% endblock %}
 
 {% block extra_js %}
@@ -218,6 +274,114 @@
         
         // اجرای اسکریپت در هنگام بارگذاری صفحه
         $('.form-check-input').trigger('change');
+        
+        // تابع برای بروزرسانی شماره ردیف‌ها
+        function updateRowNumbers() {
+            $('#items-table tbody tr:visible').each(function(index) {
+                $(this).find('td:first').text(index + 1);
+            });
+        }
+
+        // تابع برای بارگذاری اطلاعات محصول انتخاب شده
+        function setupProductSelect(productSelect) {
+            productSelect.change(function() {
+                var selectedOption = $(this).find('option:selected');
+                var row = $(this).closest('tr');
+                
+                if (selectedOption.val()) {
+                    var productId = selectedOption.val();
+                    var productName = selectedOption.text();
+                    
+                    // اینجا می‌توانیم یک درخواست AJAX برای دریافت اطلاعات بیشتر محصول انجام دهیم
+                    // فعلاً فقط کد را از متن انتخاب شده استخراج می‌کنیم
+                    var codeMatch = productName.match(/\(([^)]+)\)/);
+                    var code = codeMatch ? codeMatch[1] : '-';
+                    
+                    row.find('.product-code').text(code);
+                } else {
+                    row.find('.product-code').text('-');
+                    row.find('.product-unit').text('-');
+                    row.find('.product-price').text('-');
+                }
+            });
+        }
+        
+        // برای همه سلکت‌های موجود
+        $('.product-select').each(function() {
+            setupProductSelect($(this));
+        });
+        
+        // دکمه حذف ردیف
+        $('.delete-row').click(function() {
+            var row = $(this).closest('tr');
+            var deleteCheckbox = row.find('input[type="checkbox"][name$="-DELETE"]');
+            
+            deleteCheckbox.prop('checked', true);
+            row.hide();
+            
+            updateRowNumbers();
+            
+            // جلوگیری از حذف تمام آیتم‌ها
+            if ($('#items-table tbody tr:visible').length === 0) {
+                $('#addItemBtn').click(); // اضافه کردن یک ردیف جدید
+            }
+        });
+        
+        // دکمه اضافه کردن آیتم جدید
+        $('#addItemBtn').click(function() {
+            var totalForms = parseInt($('#id_orderitem_set-TOTAL_FORMS').val());
+            
+            // استفاده از تمپلیت HTML برای ردیف جدید
+            var template = document.getElementById('emptyRowTemplate').innerHTML;
+            var newRow = template.replace(/__PREFIX__/g, totalForms);
+            
+            // تبدیل به المنت DOM
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = newRow;
+            var newRowElement = tempDiv.firstElementChild;
+            
+            // اضافه کردن به جدول
+            $('#items-table tbody').append(newRowElement);
+            
+            // راه‌اندازی سلکت محصول
+            setupProductSelect($(newRowElement).find('.product-select'));
+            
+            // راه‌اندازی دکمه حذف
+            $(newRowElement).find('.delete-row').click(function() {
+                var row = $(this).closest('tr');
+                var deleteCheckbox = row.find('input[type="checkbox"][name$="-DELETE"]');
+                
+                deleteCheckbox.prop('checked', true);
+                row.hide();
+                
+                updateRowNumbers();
+                
+                // جلوگیری از حذف تمام آیتم‌ها
+                if ($('#items-table tbody tr:visible').length === 0) {
+                    $('#addItemBtn').click(); // اضافه کردن یک ردیف جدید
+                }
+            });
+            
+            // بروزرسانی تعداد فرم‌ها
+            $('#id_orderitem_set-TOTAL_FORMS').val(totalForms + 1);
+            
+            // بروزرسانی شماره ردیف‌ها
+            updateRowNumbers();
+            
+            // اسکرول به ردیف جدید
+            $('html, body').animate({
+                scrollTop: $(newRowElement).offset().top - 100
+            }, 500);
+        });
+        
+        // بررسی تعداد ردیف‌های خالی در ابتدای بارگذاری
+        var emptyRows = $('.empty-form-row').length;
+        if (emptyRows === 0 && {% if can_add_remove %}true{% else %}false{% endif %}) {
+            $('#addItemBtn').click(); // اضافه کردن یک ردیف خالی اگر وجود ندارد
+        }
+        
+        // بروزرسانی شماره ردیف‌ها در ابتدای بارگذاری
+        updateRowNumbers();
     });
 </script>
 {% endblock %} 

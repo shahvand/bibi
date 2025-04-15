@@ -489,6 +489,7 @@ def edit_order_items(request, pk):
         'order_form': order_form,
         'formset': formset,
         'can_add_remove': can_add_remove,
+        'products': Product.objects.all().order_by('title'),
     })
 
 # Report views

@@ -106,4 +106,52 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Contributors
 
-[Your Name/Organization] 
+[Your Name/Organization]
+
+## استقرار با Docker
+
+این پروژه می‌تواند به راحتی با استفاده از Docker راه‌اندازی شود:
+
+### پیش‌نیازها
+
+- Docker
+- Docker Compose
+
+### مراحل راه‌اندازی
+
+1. ابتدا فایل `.env` را بر اساس نمونه `.env.example` ایجاد کنید:
+
+```bash
+cp .env.example .env
+```
+
+2. در صورت نیاز، مقادیر فایل `.env` را ویرایش کنید.
+
+3. با استفاده از Docker Compose، پروژه را راه‌اندازی کنید:
+
+```bash
+docker-compose up -d
+```
+
+4. برای بررسی لاگ‌ها:
+
+```bash
+docker-compose logs -f
+```
+
+5. برای توقف سرویس‌ها:
+
+```bash
+docker-compose down
+```
+
+### نکات مهم
+
+- دیتابیس در یک volume به نام `mysql_data` ذخیره می‌شود که بین اجراهای مختلف حفظ می‌شود.
+- برای راه‌اندازی مجدد با داده‌های جدید، می‌توانید volume را حذف کنید:
+
+```bash
+docker-compose down -v
+```
+
+- برای بارگذاری داده‌های نمونه، مقدار `LOAD_SAMPLE_DATA` را در فایل `.env` یا `docker-compose.yml` به `True` تغییر دهید. 

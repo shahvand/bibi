@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=your_secure_secret_key_change_in_production
+      - DB_NAME=bibi
+      - DB_USER=bibi_user
+      - DB_PASSWORD=bibi_password
+      - DB_HOST=db
+      - DB_PORT=3306
+      - LOAD_SAMPLE_DATA=False
+    volumes:
+      - ./static:/app/static
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+
+  db:
+    image: mysql:8.0
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_DATABASE=bibi
+      - MYSQL_USER=bibi_user
+      - MYSQL_PASSWORD=bibi_password
+      - MYSQL_ROOT_PASSWORD=root_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    cap_add:
+      - SYS_NICE  # برای کاهش مشکلات احتمالی عملکرد MySQL
+
+volumes:
+  mysql_data: 

@@ -41,9 +41,8 @@
                             <th scope="col">نام راننده</th>
                             <th scope="col">شماره موبایل</th>
                             <th scope="col">شماره پلاک</th>
-                            <th scope="col">نوع وسیله نقلیه</th>
                             <th scope="col">وضعیت</th>
-                            <th scope="col">تاریخ افزودن</th>
+                            <th scope="col">یادداشت‌ها</th>
                             <th scope="col">عملیات</th>
                         </tr>
                     </thead>
@@ -54,7 +53,6 @@
                             <td>{{ driver.name }}</td>
                             <td>{{ driver.phone }}</td>
                             <td>{{ driver.license_plate|default:"-" }}</td>
-                            <td>{{ driver.vehicle_type|default:"-" }}</td>
                             <td>
                                 {% if driver.is_active %}
                                 <span class="badge bg-success">فعال</span>
@@ -62,12 +60,15 @@
                                 <span class="badge bg-danger">غیرفعال</span>
                                 {% endif %}
                             </td>
-                            <td>{{ driver.created_at|to_jalali|default:"-" }}</td>
+                            <td>{{ driver.notes|truncatechars:30|default:"-" }}</td>
                             <td>
                                 <div class="btn-group" role="group">
                                     {% if user.role == 'WAREHOUSE' or user.role == 'ADMIN' %}
                                     <a href="{% url 'driver-update' driver.id %}" class="btn btn-sm btn-warning" title="ویرایش">
                                         <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'driver-delete' driver.id %}" class="btn btn-sm btn-danger ms-1" title="حذف">
+                                        <i class="fas fa-trash"></i>
                                     </a>
                                     {% endif %}
                                 </div>

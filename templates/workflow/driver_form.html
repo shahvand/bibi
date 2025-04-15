@@ -33,15 +33,12 @@
                         {{ form.license_plate|as_crispy_field }}
                     </div>
                     <div class="col-md-6">
-                        {{ form.vehicle_type|as_crispy_field }}
+                        {{ form.is_active|as_crispy_field }}
                     </div>
                 </div>
                 
                 <div class="row">
-                    <div class="col-md-6">
-                        {{ form.is_active|as_crispy_field }}
-                    </div>
-                    <div class="col-md-6">
+                    <div class="col-12">
                         {{ form.notes|as_crispy_field }}
                     </div>
                 </div>

@@ -1,0 +1,156 @@
+{% extends 'workflow/base.html' %}
+{% load jdate_filters %}
+{% load workflow_filters %}
+{% load crispy_forms_tags %}
+
+{% block title %}ویرایش سفارش #{{ order.id }} - سیستم مدیریت انبار{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card shadow">
+        <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+            <h3>ویرایش سفارش #{{ order.id }}</h3>
+            <a href="{% url 'order-detail' order.id %}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-right"></i> بازگشت به سفارش
+            </a>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-light">
+                                <h5>اطلاعات سفارش</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th>شماره سفارش:</th>
+                                        <td>{{ order.id }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>وضعیت:</th>
+                                        <td>
+                                            {% if order.status == 'PENDING' %}
+                                            <span class="badge bg-secondary">در انتظار تایید</span>
+                                            {% elif order.status == 'APPROVED' %}
+                                            <span class="badge bg-info">تایید شده</span>
+                                            {% elif order.status == 'DELIVERED' %}
+                                            <span class="badge bg-success">تحویل داده شده</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>تاریخ سفارش:</th>
+                                        <td>{{ order.order_date|to_jalali:"%Y/%m/%d %H:%M" }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-light">
+                                <h5>توضیحات سفارش</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> 
+                                    شما می‌توانید مقادیر تایید شده محصولات را تغییر دهید یا هر آیتم را با علامت‌گذاری گزینه "رد شده" رد کنید.
+                                    لطفاً دلیل تغییرات خود را در بخش توضیحات وارد کنید.
+                                </div>
+                                {{ order_form.notes|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h5>اقلام سفارش</h5>
+                
+                {{ formset.management_form }}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>محصول</th>
+                                <th>کد</th>
+                                <th>مقدار درخواستی</th>
+                                <th>مقدار تایید شده</th>
+                                <th>واحد</th>
+                                <th>قیمت واحد</th>
+                                <th>رد کردن</th>
+                                <th>توضیحات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for form in formset %}
+                                {{ form.id }}
+                                <tr class="{% if form.instance.approved_quantity == 0 %}table-danger{% endif %}">
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ form.instance.product.title }}</td>
+                                    <td>{{ form.instance.product.code }}</td>
+                                    <td>{{ form.instance.requested_quantity|clean_number }}</td>
+                                    <td>
+                                        {{ form.approved_quantity }}
+                                        {{ form.approved_quantity.errors }}
+                                    </td>
+                                    <td>{% if form.instance.product.unit_ref %}{{ form.instance.product.unit_ref.symbol }}{% else %}{{ form.instance.product.unit }}{% endif %}</td>
+                                    <td>{{ form.instance.price_per_unit|format_price }}</td>
+                                    <td>
+                                        <div class="form-check">
+                                            {{ form.is_rejected }}
+                                            <label class="form-check-label" for="{{ form.is_rejected.id_for_label }}">
+                                                رد این آیتم
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {{ form.notes }}
+                                        {{ form.notes.errors }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'order-detail' order.id %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> انصراف
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> ذخیره تغییرات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // بررسی وضعیت رد شدن آیتم‌ها و غیرفعال کردن فیلد مقدار تایید شده
+        $('.form-check-input').change(function() {
+            var isRejected = $(this).prop('checked');
+            var quantityField = $(this).closest('tr').find('input[type="number"]');
+            
+            if (isRejected) {
+                quantityField.prop('disabled', true);
+                quantityField.val(0);
+                $(this).closest('tr').addClass('table-danger');
+            } else {
+                quantityField.prop('disabled', false);
+                $(this).closest('tr').removeClass('table-danger');
+            }
+        });
+        
+        // اجرای اسکریپت در هنگام بارگذاری صفحه
+        $('.form-check-input').trigger('change');
+    });
+</script>
+{% endblock %} 

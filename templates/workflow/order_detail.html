@@ -10,10 +10,16 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h3>سفارش #{{ order.id }}</h3>
             <div>
-                {% if order.status == 'APPROVED' or order.status == 'DELIVERED' or order.status == 'RECEIVED' %}
-                    <a href="{% url 'order-invoice' order.id %}" class="btn btn-success" target="_blank">
-                        <i class="fas fa-print"></i> آماده‌سازی پرینت
+                {% if can_edit_order %}
+                    <a href="{% url 'order-edit' order.id %}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> ویرایش سفارش
                     </a>
+                {% endif %}
+                
+                {% if order.status == 'APPROVED' or order.status == 'DELIVERED' or order.status == 'RECEIVED' %}
+                    <button onclick="preparePrint()" class="btn btn-success">
+                        <i class="fas fa-print"></i> آماده‌سازی پرینت
+                    </button>
                 {% endif %}
                 <a href="{% url 'order-list' %}" class="btn btn-outline-primary">
                     <i class="fas fa-arrow-right"></i> بازگشت به سفارشات
@@ -56,6 +62,12 @@
                                 <th>تاریخ سفارش:</th>
                                 <td>{{ order.created_at|to_jalali:"%Y/%m/%d %H:%M" }}</td>
                             </tr>
+                            {% if order.last_edit_time and order.last_edit_time != order.created_at %}
+                            <tr>
+                                <th>آخرین ویرایش:</th>
+                                <td>{{ order.last_edit_time|to_jalali:"%Y/%m/%d %H:%M" }}</td>
+                            </tr>
+                            {% endif %}
                             {% if order.approval_date %}
                             <tr>
                                 <th>تاریخ تایید:</th>
@@ -109,8 +121,8 @@
                             <th>مقدار درخواستی</th>
                             <th>مقدار تایید شده</th>
                             <th>واحد</th>
-                            <th>قیمت واحد</th>
-                            <th>قیمت کل</th>
+                            <th>قیمت واحد (تومان)</th>
+                            <th>قیمت کل (تومان)</th>
                             <th>یادداشت</th>
                         </tr>
                     </thead>
@@ -123,8 +135,8 @@
                             <td>{{ item.requested_quantity|clean_number }}</td>
                             <td>{% if item.approved_quantity %}{{ item.approved_quantity|clean_number }}{% else %}-{% endif %}</td>
                             <td>{% if item.product.unit_ref %}{{ item.product.unit_ref.symbol }}{% else %}{{ item.product.unit }}{% endif %}</td>
-                            <td>{{ item.price_per_unit|format_price }} تومان</td>
-                            <td>{{ item.total_price|format_price }} تومان</td>
+                            <td>{{ item.price_per_unit|format_price }}</td>
+                            <td>{{ item.total_price|format_price }}</td>
                             <td>{{ item.notes|default:"-" }}</td>
                         </tr>
                         {% empty %}
@@ -137,7 +149,7 @@
                     <tfoot class="table-light">
                         <tr>
                             <td colspan="7" class="text-start fw-bold">جمع کل:</td>
-                            <td class="fw-bold">{{ order.total_price|format_price }}</td>
+                            <td class="fw-bold">{{ order.total_price|format_price }} تومان</td>
                             <td></td>
                         </tr>
                     </tfoot>
@@ -162,7 +174,7 @@
                                             <th>محصول</th>
                                             <th>مقدار درخواستی</th>
                                             <th>مقدار تایید شده</th>
-                                            <th>قیمت واحد</th>
+                                            <th>قیمت واحد (تومان)</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -247,4 +259,230 @@
         </div>
     </div>
 </div>
+
+<!-- صفحه پرینت -->
+<div id="print-container" class="d-none">
+    <div class="print-document">
+        <div class="print-header">
+            <div class="text-center">
+                <h2>سفارش #{{ order.id }}</h2>
+                <div>وضعیت: {{ order.get_status_display }}</div>
+                <div>تاریخ چاپ: {% now "Y/m/d H:i" %}</div>
+            </div>
+        </div>
+        
+        <div class="print-info mb-4">
+            <div class="row">
+                <div class="col-6">
+                    <h5>اطلاعات سفارش</h5>
+                    <table class="table table-sm table-bordered">
+                        <tr>
+                            <th width="40%">درخواست کننده:</th>
+                            <td>{{ order.requester.get_full_name|default:order.requester.username }}</td>
+                        </tr>
+                        <tr>
+                            <th>تاریخ سفارش:</th>
+                            <td>{{ order.created_at|to_jalali:"%Y/%m/%d %H:%M" }}</td>
+                        </tr>
+                        {% if order.last_edit_time and order.last_edit_time != order.created_at %}
+                        <tr>
+                            <th>آخرین ویرایش:</th>
+                            <td>{{ order.last_edit_time|to_jalali:"%Y/%m/%d %H:%M" }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if order.approval_date %}
+                        <tr>
+                            <th>تاریخ تایید:</th>
+                            <td>{{ order.approval_date|to_jalali:"%Y/%m/%d %H:%M" }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if order.delivery_date %}
+                        <tr>
+                            <th>تاریخ تحویل:</th>
+                            <td>{{ order.delivery_date|to_jalali:"%Y/%m/%d %H:%M" }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+                <div class="col-6">
+                    <h5>اطلاعات تکمیلی</h5>
+                    <table class="table table-sm table-bordered">
+                        <tr>
+                            <th width="40%">مدیر انبار:</th>
+                            <td>{% if order.warehouse_manager %}{{ order.warehouse_manager.get_full_name|default:order.warehouse_manager.username }}{% else %}تعیین نشده{% endif %}</td>
+                        </tr>
+                        <tr>
+                            <th>راننده:</th>
+                            <td>{{ order.driver.name|default:"تعیین نشده" }}</td>
+                        </tr>
+                        {% if order.notes %}
+                        <tr>
+                            <th>یادداشت‌ها:</th>
+                            <td>{{ order.notes }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="print-items">
+            <h5>اقلام سفارش</h5>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th width="5%">#</th>
+                        <th width="25%">محصول</th>
+                        <th width="10%">کد</th>
+                        <th width="10%">مقدار</th>
+                        <th width="10%">واحد</th>
+                        <th width="20%">قیمت واحد (تومان)</th>
+                        <th width="20%">قیمت کل (تومان)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items.all %}
+                    <tr class="{% if forloop.counter0|divisibleby:20 and not forloop.first %}page-break-before{% endif %}">
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item.product.title }}</td>
+                        <td>{{ item.product.code }}</td>
+                        <td>{% if item.approved_quantity %}{{ item.approved_quantity|clean_number }}{% else %}{{ item.requested_quantity|clean_number }}{% endif %}</td>
+                        <td>{% if item.product.unit_ref %}{{ item.product.unit_ref.symbol }}{% else %}{{ item.product.unit }}{% endif %}</td>
+                        <td>{{ item.price_per_unit|format_price }}</td>
+                        <td>{{ item.total_price|format_price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="6" class="text-start fw-bold">جمع کل:</td>
+                        <td class="fw-bold">{{ order.total_price|format_price }} تومان</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        <div class="print-signatures mt-5">
+            <div class="row">
+                <div class="col-6 text-center">
+                    <div>امضای تحویل دهنده:</div>
+                    <div class="border-bottom my-5">&nbsp;</div>
+                    <div>تاریخ: _______________</div>
+                </div>
+                <div class="col-6 text-center">
+                    <div>امضای تحویل گیرنده:</div>
+                    <div class="border-bottom my-5">&nbsp;</div>
+                    <div>تاریخ: _______________</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="print-footer text-center mt-4">
+            <p>سیستم مدیریت انبار - صفحه <span class="page-number"></span></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+/* تنظیمات عمومی چاپ */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #print-container, #print-container * {
+        visibility: visible;
+    }
+    #print-container {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+    .no-print {
+        display: none !important;
+    }
+    
+    /* تنظیمات جهت و اندازه کاغذ */
+    @page {
+        size: A4 portrait;
+        margin: 1cm;
+    }
+    
+    /* صفحه‌بندی */
+    .page-break-before {
+        page-break-before: always;
+    }
+    
+    /* شماره گذاری صفحات */
+    .page-number:after {
+        content: counter(page);
+    }
+    
+    /* اندازه متن و جدول‌ها برای چاپ */
+    table {
+        font-size: 12px;
+    }
+    
+    th, td {
+        padding: 4px !important;
+    }
+    
+    /* فیکس هدر و فوتر در هر صفحه */
+    .print-header {
+        position: running(header);
+    }
+    
+    .print-footer {
+        position: running(footer);
+    }
+    
+    @page {
+        @top-center {
+            content: element(header);
+        }
+        @bottom-center {
+            content: element(footer);
+        }
+    }
+}
+
+/* نمایش در صفحه */
+#print-container {
+    direction: rtl;
+    text-align: right;
+    font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+}
+</style>
+
+<script>
+function preparePrint() {
+    // نمایش نسخه پرینت
+    document.getElementById('print-container').classList.remove('d-none');
+    
+    // اضافه کردن کلاس page-break-before بعد از هر 20 آیتم
+    let tableRows = document.querySelectorAll('#print-container .print-items tbody tr');
+    for (let i = 0; i < tableRows.length; i++) {
+        if (i > 0 && i % 20 === 0) {
+            tableRows[i].classList.add('page-break-before');
+        }
+    }
+    
+    // تنظیم شماره صفحات
+    const pages = Math.ceil(tableRows.length / 20) || 1;
+    console.log(`تعداد صفحات: ${pages}`);
+    
+    // اجرای دستور پرینت
+    setTimeout(function() {
+        window.print();
+        
+        // پنهان کردن مجدد نسخه پرینت بعد از چاپ
+        setTimeout(function() {
+            document.getElementById('print-container').classList.add('d-none');
+        }, 100);
+    }, 500);
+}
+</script>
 {% endblock %} 

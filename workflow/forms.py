@@ -114,4 +114,51 @@ class UnitForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'symbol': forms.TextInput(attrs={'class': 'form-control'}),
-        } 
+        }
+
+class RequesterOrderEditForm(forms.ModelForm):
+    """فرم ویرایش سفارش توسط درخواست کننده قبل از تایید دریافت"""
+    
+    class Meta:
+        model = Order
+        fields = ['notes']
+        widgets = {
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'توضیحات یا دلایل تغییرات را وارد کنید...'}),
+        }
+
+class OrderItemEditForm(forms.ModelForm):
+    """فرم ویرایش آیتم‌های سفارش توسط درخواست کننده"""
+    
+    is_rejected = forms.BooleanField(required=False, label='رد شده', 
+                                    widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))
+    
+    class Meta:
+        model = OrderItem
+        fields = ['approved_quantity', 'notes', 'is_rejected']
+        widgets = {
+            'approved_quantity': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'دلیل رد یا تغییر تعداد را بنویسید'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # قالب‌بندی مقادیر بدون نقطه اعشار و صفرهای اضافی در حالت ویرایش
+        if self.instance and self.instance.pk:
+            if self.instance.approved_quantity:
+                self.initial['approved_quantity'] = format_price_input(self.instance.approved_quantity)
+            # اگر تعداد تایید شده صفر باشد، آیتم را به عنوان رد شده علامت می‌زنیم
+            if self.instance.approved_quantity == 0:
+                self.initial['is_rejected'] = True
+    
+    def save(self, commit=True):
+        """ذخیره تغییرات با در نظر گرفتن رد کردن آیتم"""
+        item = super().save(commit=False)
+        
+        # اگر آیتم رد شده باشد، تعداد تایید شده را صفر می‌کنیم
+        if self.cleaned_data.get('is_rejected', False):
+            item.approved_quantity = 0
+        
+        if commit:
+            item.save()
+        
+        return item 

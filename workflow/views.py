@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
-from django.forms import modelformset_factory
-from django.http import HttpResponseForbidden, HttpResponse
+from django.forms import modelformset_factory, inlineformset_factory
+from django.http import HttpResponseForbidden, HttpResponse, HttpResponseRedirect
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
@@ -15,7 +15,7 @@ from .models import User, Product, Order, OrderItem, Driver, Unit
 from .forms import (
     UserRegisterForm, ProductForm, OrderItemForm, OrderItemFormSet, 
     WarehouseOrderForm, WarehouseOrderItemForm, OrderReceiptForm, DriverForm,
-    UnitForm
+    UnitForm, RequesterOrderEditForm, OrderItemEditForm
 )
 
 # Utility functions
@@ -158,8 +158,26 @@ class DriverUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return self.request.user.role in ['ADMIN', 'WAREHOUSE']
     
     def form_valid(self, form):
-        messages.success(self.request, f'Driver updated successfully!')
+        messages.success(self.request, 'راننده با موفقیت به‌روزرسانی شد!')
         return super().form_valid(form)
+
+class DriverDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Driver
+    template_name = 'workflow/driver_confirm_delete.html'
+    success_url = reverse_lazy('driver-list')
+    
+    def test_func(self):
+        return self.request.user.role in ['ADMIN', 'WAREHOUSE']
+    
+    def delete(self, request, *args, **kwargs):
+        driver = self.get_object()
+        # اگر راننده با سفارشی مرتبط است، اجازه حذف نمی‌دهیم
+        if driver.order_set.exists():
+            messages.error(request, 'این راننده با سفارش‌هایی مرتبط است و نمی‌توان آن را حذف کرد.')
+            return HttpResponseRedirect(self.success_url)
+        
+        messages.success(request, 'راننده با موفقیت حذف شد.')
+        return super().delete(request, *args, **kwargs)
 
 # Order views
 @login_required
@@ -233,17 +251,40 @@ class OrderListView(LoginRequiredMixin, ListView):
     template_name = 'workflow/order_list.html'
     context_object_name = 'orders'
     ordering = ['-order_date']
+    paginate_by = 10
     
     def get_queryset(self):
         user = self.request.user
         queryset = super().get_queryset()
         
+        # فیلتر بر اساس نقش کاربر
         if user.role == 'REQUESTER':
-            return queryset.filter(requester=user)
-        elif user.role == 'WAREHOUSE':
-            return queryset
-        elif user.role == 'ACCOUNTANT':
-            return queryset
+            queryset = queryset.filter(requester=user)
+        
+        # فیلتر بر اساس وضعیت سفارش
+        status = self.request.GET.get('status')
+        if status:
+            queryset = queryset.filter(status=status)
+        
+        # فیلتر بر اساس تاریخ
+        date_from = self.request.GET.get('date_from')
+        if date_from:
+            queryset = queryset.filter(order_date__gte=date_from)
+            
+        date_to = self.request.GET.get('date_to')
+        if date_to:
+            queryset = queryset.filter(order_date__lte=date_to)
+        
+        # فیلتر بر اساس جستجو
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(id__icontains=search) |
+                Q(requester__username__icontains=search) |
+                Q(requester__first_name__icontains=search) |
+                Q(requester__last_name__icontains=search) |
+                Q(notes__icontains=search)
+            )
         
         return queryset
 
@@ -266,10 +307,19 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
                 context['can_approve'] = True
         
         # For requester
-        if self.request.user.role == 'REQUESTER' and self.object.status == 'DELIVERED':
-            context['receipt_form'] = OrderReceiptForm(instance=self.object)
-            context['can_confirm_receipt'] = True
+        if self.request.user.role == 'REQUESTER' and self.request.user == self.object.requester:
+            # امکان تایید دریافت در وضعیت تحویل داده شده
+            if self.object.status == 'DELIVERED':
+                context['receipt_form'] = OrderReceiptForm(instance=self.object)
+                context['can_confirm_receipt'] = True
             
+            # امکان ویرایش در حالت‌های زیر:
+            # 1. در وضعیت PENDING، همیشه قابل ویرایش است
+            # 2. در وضعیت APPROVED، فقط اگر به راننده تحویل داده نشده باشد
+            if self.object.status == 'PENDING' or (self.object.status == 'APPROVED' and self.object.driver is None):
+                context['can_edit_order'] = True
+                context['edit_form'] = RequesterOrderEditForm(instance=self.object)
+        
         return context
 
 @role_required(['WAREHOUSE'])
@@ -368,6 +418,74 @@ def confirm_receipt(request, pk):
             messages.error(request, 'There was an error in the form.')
     
     return redirect('order-detail', pk=order.pk)
+
+@login_required
+@role_required(['REQUESTER'])
+def edit_order_items(request, pk):
+    """ویرایش آیتم‌های سفارش توسط درخواست کننده"""
+    order = get_object_or_404(Order, pk=pk)
+    
+    # بررسی دسترسی: فقط درخواست کننده خود سفارش می‌تواند آن را ویرایش کند
+    if request.user != order.requester:
+        return HttpResponseForbidden("شما اجازه ویرایش این سفارش را ندارید.")
+    
+    # بررسی وضعیت: 
+    # 1. در حالت PENDING کاربر می‌تواند سفارش را ویرایش کند
+    # 2. در حالت APPROVED فقط اگر به راننده تحویل داده نشده باشد، قابل ویرایش است
+    # 3. در سایر حالت‌ها امکان ویرایش وجود ندارد
+    if order.status not in ['PENDING', 'APPROVED']:
+        messages.error(request, 'این سفارش در وضعیتی نیست که بتوانید آن را ویرایش کنید.')
+        return redirect('order-detail', pk=order.pk)
+    
+    if order.status == 'APPROVED' and order.driver is not None:
+        messages.error(request, 'این سفارش به راننده تحویل داده شده و دیگر قابل ویرایش نیست.')
+        return redirect('order-detail', pk=order.pk)
+    
+    # تنظیم فرم‌ست برای آیتم‌های سفارش
+    OrderItemFormSet = inlineformset_factory(
+        Order, OrderItem, 
+        form=OrderItemEditForm,
+        extra=0,
+        can_delete=False
+    )
+    
+    if request.method == 'POST':
+        order_form = RequesterOrderEditForm(request.POST, instance=order)
+        formset = OrderItemFormSet(request.POST, instance=order)
+        
+        if order_form.is_valid() and formset.is_valid():
+            with transaction.atomic():
+                # ذخیره یادداشت‌های سفارش
+                order_form.save()
+                
+                # ذخیره تغییرات آیتم‌ها با بررسی آیتم‌های رد شده
+                formset.save()
+                
+                # بررسی اگر تمام آیتم‌ها رد شده باشند، سفارش به وضعیت رد شده تغییر می‌کند
+                all_items_rejected = all(
+                    item.approved_quantity == 0 
+                    for item in order.items.all()
+                )
+                
+                if all_items_rejected:
+                    order.status = 'REJECTED'
+                    order.save()
+                    messages.success(request, 'سفارش به دلیل رد تمام آیتم‌ها لغو شد.')
+                else:
+                    messages.success(request, 'تغییرات سفارش با موفقیت ذخیره شد.')
+                
+            return redirect('order-detail', pk=order.pk)
+        else:
+            messages.error(request, 'لطفاً خطاهای فرم را اصلاح کنید.')
+    else:
+        order_form = RequesterOrderEditForm(instance=order)
+        formset = OrderItemFormSet(instance=order)
+    
+    return render(request, 'workflow/order_edit.html', {
+        'order': order,
+        'order_form': order_form,
+        'formset': formset,
+    })
 
 # Report views
 @login_required

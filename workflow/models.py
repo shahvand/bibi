@@ -22,9 +22,9 @@ class UserManager(BaseUserManager):
 
 class User(AbstractUser):
     ROLE_CHOICES = (
-        ('REQUESTER', 'Requester'),
-        ('WAREHOUSE', 'Warehouse Manager'),
-        ('ACCOUNTANT', 'Accountant'),
+        ('REQUESTER', 'شعبه'),
+        ('WAREHOUSE', 'انباردار'),
+        ('ACCOUNTANT', 'حسابدار'),
         ('ADMIN', 'Administrator'),
     )
     
@@ -94,6 +94,7 @@ class Order(models.Model):
     
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     order_date = models.DateTimeField(auto_now_add=True)
+    last_edit_time = models.DateTimeField(auto_now=True, verbose_name="زمان آخرین ویرایش")
     approval_date = models.DateTimeField(null=True, blank=True)
     delivery_date = models.DateTimeField(null=True, blank=True)
     receipt_date = models.DateTimeField(null=True, blank=True)

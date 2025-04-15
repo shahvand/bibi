@@ -39,13 +39,13 @@
                 </div>
                 <div class="col-md-3">
                     <label for="date_from" class="form-label">از تاریخ</label>
-                    <input type="text" name="date_from" id="date_from" class="form-control datepicker" value="{{ request.GET.date_from }}">
-                    <input type="hidden" id="date_from_hidden" name="date_from_hidden">
+                    <input type="text" name="date_from_display" id="date_from_display" class="form-control datepicker" value="{{ request.GET.date_from_display }}">
+                    <input type="hidden" id="date_from" name="date_from" value="{{ request.GET.date_from }}">
                 </div>
                 <div class="col-md-3">
                     <label for="date_to" class="form-label">تا تاریخ</label>
-                    <input type="text" name="date_to" id="date_to" class="form-control datepicker" value="{{ request.GET.date_to }}">
-                    <input type="hidden" id="date_to_hidden" name="date_to_hidden">
+                    <input type="text" name="date_to_display" id="date_to_display" class="form-control datepicker" value="{{ request.GET.date_to_display }}">
+                    <input type="hidden" id="date_to" name="date_to" value="{{ request.GET.date_to }}">
                 </div>
                 <div class="col-md-3">
                     <label for="search" class="form-label">جستجو</label>
@@ -56,6 +56,14 @@
                         </button>
                     </div>
                 </div>
+                <div class="col-12 mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> اعمال فیلتر
+                    </button>
+                    <a href="{% url 'order-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> پاک کردن فیلترها
+                    </a>
+                </div>
             </form>
         </div>
         <div class="card-body">
@@ -64,7 +72,6 @@
                     <thead class="thead-dark">
                         <tr>
                             <th scope="col">#</th>
-                            <th scope="col">شناسه سفارش</th>
                             <th scope="col">درخواست کننده</th>
                             <th scope="col">تاریخ سفارش</th>
                             <th scope="col">تعداد اقلام</th>
@@ -85,7 +92,7 @@
                                 {% endif %}
                             </td>
                             <td>{{ order.order_date|to_jalali }}</td>
-                            <td>{{ order.items_count }}</td>
+                            <td>{{ order.items.count }}</td>
                             <td>
                                 {% if order.status == 'PENDING' %}
                                 <span class="badge bg-warning">در انتظار</span>
@@ -106,29 +113,20 @@
                                     </a>
                                     
                                     {% if user.role == 'WAREHOUSE' and order.status == 'PENDING' %}
-                                    <a href="{% url 'order-approve' order.id %}" class="btn btn-sm btn-success ms-1">
+                                    <a href="{% url 'order-detail' order.id %}" class="btn btn-sm btn-success ms-1">
                                         <i class="fas fa-check"></i> تایید
-                                    </a>
-                                    <a href="{% url 'order-reject' order.id %}" class="btn btn-sm btn-danger ms-1">
-                                        <i class="fas fa-times"></i> رد
                                     </a>
                                     {% endif %}
                                     
                                     {% if user.role == 'WAREHOUSE' and order.status == 'APPROVED' %}
-                                    <a href="{% url 'order-deliver' order.id %}" class="btn btn-sm btn-primary ms-1">
+                                    <a href="{% url 'order-detail' order.id %}" class="btn btn-sm btn-primary ms-1">
                                         <i class="fas fa-truck"></i> ارسال
                                     </a>
                                     {% endif %}
                                     
                                     {% if user.role == 'REQUESTER' and order.status == 'DELIVERED' %}
-                                    <a href="{% url 'order-receive' order.id %}" class="btn btn-sm btn-success ms-1">
+                                    <a href="{% url 'order-detail' order.id %}" class="btn btn-sm btn-success ms-1">
                                         <i class="fas fa-clipboard-check"></i> تایید دریافت
-                                    </a>
-                                    {% endif %}
-                                    
-                                    {% if user.role == 'ACCOUNTANT' and order.status == 'RECEIVED' %}
-                                    <a href="{% url 'order-invoice' order.id %}" class="btn btn-sm btn-primary ms-1">
-                                        <i class="fas fa-file-invoice"></i> صدور فاکتور
                                     </a>
                                     {% endif %}
                                 </div>
@@ -136,7 +134,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="text-center">هیچ سفارشی یافت نشد</td>
+                            <td colspan="6" class="text-center">هیچ سفارشی یافت نشد</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -149,10 +147,10 @@
                 <ul class="pagination justify-content-center">
                     {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page=1">اولین</a>
+                        <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.date_from %}date_from={{ request.GET.date_from }}&{% endif %}{% if request.GET.date_to %}date_to={{ request.GET.date_to }}&{% endif %}page=1">اولین</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ page_obj.previous_page_number }}">قبلی</a>
+                        <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.date_from %}date_from={{ request.GET.date_from }}&{% endif %}{% if request.GET.date_to %}date_to={{ request.GET.date_to }}&{% endif %}page={{ page_obj.previous_page_number }}">قبلی</a>
                     </li>
                     {% endif %}
                     
@@ -163,17 +161,17 @@
                     </li>
                     {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                     <li class="page-item">
-                        <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ num }}">{{ num }}</a>
+                        <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.date_from %}date_from={{ request.GET.date_from }}&{% endif %}{% if request.GET.date_to %}date_to={{ request.GET.date_to }}&{% endif %}page={{ num }}">{{ num }}</a>
                     </li>
                     {% endif %}
                     {% endfor %}
                     
                     {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ page_obj.next_page_number }}">بعدی</a>
+                        <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.date_from %}date_from={{ request.GET.date_from }}&{% endif %}{% if request.GET.date_to %}date_to={{ request.GET.date_to }}&{% endif %}page={{ page_obj.next_page_number }}">بعدی</a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ page_obj.paginator.num_pages }}">آخرین</a>
+                        <a class="page-link" href="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.date_from %}date_from={{ request.GET.date_from }}&{% endif %}{% if request.GET.date_to %}date_to={{ request.GET.date_to }}&{% endif %}page={{ page_obj.paginator.num_pages }}">آخرین</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -189,7 +187,7 @@
 <script src="https://unpkg.com/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
 <script>
     $(document).ready(function() {
-        // Initialize Persian DatePicker
+        // تنظیم تقویم شمسی
         $('.datepicker').persianDatepicker({
             format: 'YYYY/MM/DD',
             autoClose: true,
@@ -200,35 +198,39 @@
                 }
             },
             onSelect: function(unix) {
-                // When a date is selected, set the hidden input value to ISO format for backend processing
                 var instance = $(this.model.inputElement).data("datepicker");
                 var selectedDate = new persianDate(unix);
                 var gregorianDate = selectedDate.toCalendar('gregorian').toLocale('en').format('YYYY-MM-DD');
                 
-                if ($(this.model.inputElement).attr('id') === 'date_from') {
-                    $('#date_from_hidden').val(gregorianDate);
-                } else if ($(this.model.inputElement).attr('id') === 'date_to') {
-                    $('#date_to_hidden').val(gregorianDate);
+                // مقدار فیلد مخفی را تنظیم می‌کنیم
+                if ($(this.model.inputElement).attr('id') === 'date_from_display') {
+                    $('#date_from').val(gregorianDate);
+                } else if ($(this.model.inputElement).attr('id') === 'date_to_display') {
+                    $('#date_to').val(gregorianDate);
                 }
             }
         });
         
-        // Form submission handling
-        $('form').on('submit', function(e) {
-            e.preventDefault();
-            var dateFrom = $('#date_from_hidden').val();
-            var dateTo = $('#date_to_hidden').val();
-            var status = $('#status').val();
-            var search = $('#search').val();
-            
-            var url = window.location.pathname + '?';
-            if (status) url += 'status=' + status + '&';
-            if (dateFrom) url += 'date_from=' + dateFrom + '&';
-            if (dateTo) url += 'date_to=' + dateTo + '&';
-            if (search) url += 'search=' + search;
-            
-            window.location.href = url;
-        });
+        // اگر قبلاً تاریخ انتخاب شده بود، آن را نمایش می‌دهیم
+        if ($('#date_from').val()) {
+            try {
+                var fromDate = new Date($('#date_from').val());
+                var persianFromDate = new persianDate(fromDate).format('YYYY/MM/DD');
+                $('#date_from_display').val(persianFromDate);
+            } catch (e) {
+                console.error('Error converting date:', e);
+            }
+        }
+        
+        if ($('#date_to').val()) {
+            try {
+                var toDate = new Date($('#date_to').val());
+                var persianToDate = new persianDate(toDate).format('YYYY/MM/DD');
+                $('#date_to_display').val(persianToDate);
+            } catch (e) {
+                console.error('Error converting date:', e);
+            }
+        }
     });
 </script>
 {% endblock %} 

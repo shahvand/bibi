@@ -10,8 +10,19 @@ ENV PYTHONUNBUFFERED 1
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         gcc \
-        postgresql-client \
+        pkg-config \
+        default-libmysqlclient-dev \
+        python3-dev \
+        build-essential \
         libpq-dev \
+        postgresql-client \
+        # وابستگی‌های pycairo
+        libcairo2-dev \
+        # وابستگی‌های WeasyPrint
+        libpango1.0-dev \
+        libgdk-pixbuf2.0-dev \
+        shared-mime-info \
+        libffi-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

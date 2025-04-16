@@ -12,8 +12,8 @@ services:
       - DEBUG=True
       - SECRET_KEY=qwerqwew4c5w45@##545454
       - DB_NAME=bibi
-      - DB_USER=bibi_user
-      - DB_PASSWORD=coweorw@#k
+      - DB_USER=root
+      - DB_PASSWORD=rAdmin12@x
       - DB_HOST=db
       - DB_PORT=3306
       - LOAD_SAMPLE_DATA=False
@@ -29,7 +29,7 @@ services:
     networks:
       - bibi_network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "bibi_user", "-pcoweorw@#k"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prAdmin12@x"]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -39,8 +39,6 @@ services:
     #   - "3306:3306"
     environment:
       - MYSQL_DATABASE=bibi
-      - MYSQL_USER=bibi_user
-      - MYSQL_PASSWORD=coweorw@#k
       - MYSQL_ROOT_PASSWORD=rAdmin12@x
     volumes:
       - mysql_data:/var/lib/mysql

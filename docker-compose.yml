@@ -16,6 +16,7 @@ services:
       - DB_HOST=db
       - DB_PORT=3306
       - LOAD_SAMPLE_DATA=False
+      - ALLOWED_HOSTS=localhost,127.0.0.1,93.118.119.250
     volumes:
       - ./static:/app/static
       - ./media:/app/media

@@ -1,12 +1,10 @@
-FROM python:3.9-slim
-
-WORKDIR /home/app
+FROM python:3.9-slim as builder
 
 # تنظیم متغیرهای محیطی
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# نصب وابستگی‌های سیستمی مورد نیاز
+# نصب وابستگی‌های سیستمی مورد نیاز برای بیلد پکیج‌ها
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         gcc \
@@ -26,10 +24,41 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# کپی فایل‌های وابستگی و نصب آن‌ها
+# ساخت محیط مجازی و نصب وابستگی‌ها
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# کپی فقط فایل requirements برای کش بهتر
+WORKDIR /requirements
 COPY requirements.txt .
 RUN pip install --upgrade pip \
     && pip install -r requirements.txt
+
+# مرحله نهایی
+FROM python:3.9-slim
+
+# تنظیم متغیرهای محیطی
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# نصب وابستگی‌های زمان اجرا
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        default-libmysqlclient-dev \
+        libcairo2 \
+        libpango-1.0-0 \
+        libpangocairo-1.0-0 \
+        libgdk-pixbuf2.0-0 \
+        shared-mime-info \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# کپی محیط مجازی از مرحله قبل
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# تنظیم دایرکتوری کاری
+WORKDIR /home/app
 
 # کپی پروژه
 COPY . .

@@ -38,7 +38,7 @@ COPY . .
 RUN mkdir -p /home/app/static /home/app/media
 
 # تنظیم دسترسی به فایل entrypoint
-RUN chmod +x docker-entrypoint.sh
+RUN chmod +x /home/app/docker-entrypoint.sh
 
 # اجرای برنامه
-CMD ["./docker-entrypoint.sh"] 
+CMD ["/bin/bash", "/home/app/docker-entrypoint.sh"] 

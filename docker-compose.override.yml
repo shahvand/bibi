@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  web:
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=qwerqwew4c5w45@##545454
+      - DB_NAME=bibi
+      - DB_USER=bibi_user
+      - DB_PASSWORD=coweorw@#k
+      - DB_HOST=db
+      - DB_PORT=3306
+      - LOAD_SAMPLE_DATA=False
+      - ALLOWED_HOSTS=localhost,127.0.0.1,93.118.119.250
+
+  db:
+    # بدون انتشار پورت به بیرون - فقط برای استفاده داخلی
+    environment:
+      - MYSQL_DATABASE=bibi
+      - MYSQL_USER=bibi_user
+      - MYSQL_PASSWORD=coweorw@#k
+      - MYSQL_ROOT_PASSWORD=rAdmin12@x 

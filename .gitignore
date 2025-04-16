@@ -44,7 +44,3 @@ staticfiles/
 # OS specific files
 .DS_Store
 Thumbs.db
-
-# Docker local configurations
-docker-compose.yml
-docker-compose.override.yml 

@@ -5,8 +5,9 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+    networks:
+      - bibi_network
     environment:
       - DEBUG=True
       - SECRET_KEY=qwerqwew4c5w45@##545454
@@ -25,12 +26,14 @@ services:
   db:
     image: mysql:8.0
     restart: always
+    networks:
+      - bibi_network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "bibi_user", "-pcoweorw@#k"]
-      interval: 5s
-      timeout: 5s
+      interval: 10s
+      timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 60s
     # حذف انتشار پورت به بیرون - فقط برای استفاده داخلی سرویس web
     # ports:
     #   - "3306:3306"
@@ -46,4 +49,8 @@ services:
       - SYS_NICE  # برای کاهش مشکلات احتمالی عملکرد MySQL
 
 volumes:
-  mysql_data: 
+  mysql_data:
+
+networks:
+  bibi_network:
+    driver: bridge 

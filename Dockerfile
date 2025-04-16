@@ -37,8 +37,8 @@ COPY . .
 # ایجاد دایرکتوری‌های استاتیک و مدیا
 RUN mkdir -p /home/app/static /home/app/media
 
-# اجرای collectstatic به صورت خودکار
-RUN python manage.py collectstatic --noinput
+# تنظیم دسترسی به فایل entrypoint
+RUN chmod +x docker-entrypoint.sh
 
 # اجرای برنامه
-CMD ["gunicorn", "bibi.wsgi:application", "--bind", "0.0.0.0:8000"] 
+CMD ["./docker-entrypoint.sh"] 

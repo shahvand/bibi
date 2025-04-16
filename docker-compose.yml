@@ -1,4 +1,3 @@
-
 services:
   web:
     build: .
@@ -6,13 +5,14 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - DEBUG=True
       - SECRET_KEY=qwerqwew4c5w45@##545454
       - DB_NAME=bibi
       - DB_USER=bibi_user
-      - DB_PASSWORD=bibi_password
+      - DB_PASSWORD=coweorw@#k
       - DB_HOST=db
       - DB_PORT=3306
       - LOAD_SAMPLE_DATA=False
@@ -24,8 +24,15 @@ services:
   db:
     image: mysql:8.0
     restart: always
-    ports:
-      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "bibi_user", "-pcoweorw@#k"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # حذف انتشار پورت به بیرون - فقط برای استفاده داخلی سرویس web
+    # ports:
+    #   - "3306:3306"
     environment:
       - MYSQL_DATABASE=bibi
       - MYSQL_USER=bibi_user

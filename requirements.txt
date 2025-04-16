@@ -9,4 +9,5 @@ django-debug-toolbar==4.2.0
 pymemcache==4.0.0
 gunicorn==21.2.0
 python-dotenv==1.0.0
-django-filter==23.2 
+django-filter==23.2
+jdatetime==4.1.1 

@@ -1,7 +1,8 @@
-
 services:
   web:
-    build: .
+    build: 
+      context: .
+      shm_size: '2gb'
     command: >
       bash -c "
         echo 'Waiting for database...' &&

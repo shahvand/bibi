@@ -1,30 +1,33 @@
-FROM python:3.10-slim
+FROM python:3.9-slim
 
-WORKDIR /app
+WORKDIR /home/app
 
-# نصب پکیج‌های مورد نیاز سیستم
-RUN apt-get update && apt-get install -y \
-    default-libmysqlclient-dev \
-    default-mysql-client \
-    gcc \
-    pkg-config \
+# تنظیم متغیرهای محیطی
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# نصب وابستگی‌های سیستمی مورد نیاز
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        gcc \
+        postgresql-client \
+        libpq-dev \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# کپی فایل‌های پروژه
+# کپی فایل‌های وابستگی و نصب آن‌ها
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
 
+# کپی پروژه
 COPY . .
 
-# متغیرهای محیطی پایه را تنظیم می‌کنیم
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# ایجاد دایرکتوری‌های استاتیک و مدیا
+RUN mkdir -p /home/app/static /home/app/media
 
-# تنظیم پورت برای اجرای سرور
-EXPOSE 8000
+# اجرای collectstatic به صورت خودکار
+RUN python manage.py collectstatic --noinput
 
-# اسکریپت اجرایی برای استارت برنامه
-COPY ./docker-entrypoint.sh /
-RUN chmod +x /docker-entrypoint.sh
-
-ENTRYPOINT ["/docker-entrypoint.sh"] 
+# اجرای برنامه
+CMD ["gunicorn", "bibi.wsgi:application", "--bind", "0.0.0.0:8000"] 

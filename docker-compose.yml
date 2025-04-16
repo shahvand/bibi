@@ -1,54 +1,51 @@
+version: '3.8'
+
 services:
   web:
     build: .
-    restart: always
-    ports:
-      - "8000:8000"
+    entrypoint: ["sh", "docker-entrypoint.sh"]
+    volumes:
+      - .:/home/app
+      - static_volume:/home/app/static
+      - media_volume:/home/app/media
+    env_file:
+      - ./.env
+    environment:
+      - DEBUG=${DEBUG}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
     depends_on:
       - db
-    networks:
-      - bibi_network
-    environment:
-      - DEBUG=True
-      - SECRET_KEY=qwerqwew4c5w45@##545454
-      - DB_NAME=bibi
-      - DB_USER=root
-      - DB_PASSWORD=rAdmin12@x
-      - DB_HOST=db
-      - DB_PORT=3306
-      - LOAD_SAMPLE_DATA=False
-      - ALLOWED_HOSTS=localhost,127.0.0.1,93.118.119.250
-    volumes:
-      - ./static:/app/static
-      - ./media:/app/media
-      - ./staticfiles:/app/staticfiles
+    restart: always
 
   db:
     image: mysql:8.0
-    restart: always
-    networks:
-      - bibi_network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prAdmin12@x"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-    # حذف انتشار پورت به بیرون - فقط برای استفاده داخلی سرویس web
-    # ports:
-    #   - "3306:3306"
-    environment:
-      - MYSQL_DATABASE=bibi
-      - MYSQL_ROOT_PASSWORD=rAdmin12@x
     volumes:
       - mysql_data:/var/lib/mysql
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    cap_add:
-      - SYS_NICE  # برای کاهش مشکلات احتمالی عملکرد MySQL
+    env_file:
+      - ./.env
+    environment:
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+    restart: always
+    ports:
+      - "3306:3306"
+
+  nginx:
+    image: nginx:1.21
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - static_volume:/home/app/static
+      - media_volume:/home/app/media
+    depends_on:
+      - web
+    restart: always
 
 volumes:
   mysql_data:
-
-networks:
-  bibi_network:
-    driver: bridge 
+  static_volume:
+  media_volume: 

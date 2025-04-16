@@ -1,25 +1,30 @@
 #!/bin/bash
 
-# انتظار برای آماده شدن دیتابیس
-echo "Waiting for MySQL..."
+# انتظار برای آماده‌سازی دیتابیس
+echo "Waiting for database..."
+sleep 10
 
-# انتظار ثابت برای اطمینان از شروع کامل دیتابیس
-sleep 30
-
-# اجرای مایگریشن‌ها
+# اجرای migrations
 echo "Applying database migrations..."
 python manage.py migrate
+
+# ایجاد کاربر admin
+echo "Creating superuser if needed..."
+python manage.py shell -c "
+from django.contrib.auth import get_user_model;
+User = get_user_model();
+if not User.objects.filter(username='admin').exists():
+    User.objects.create_superuser('admin', 'admin@example.com', 'Admin@S3cur3P@ss!2024', 
+                                 first_name='مدیر', last_name='سیستم', role='WAREHOUSE_MANAGER')
+    print('Superuser created successfully');
+else:
+    print('Superuser already exists');
+"
 
 # جمع‌آوری فایل‌های استاتیک
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
-# بررسی وجود داده‌های نمونه و ایجاد آنها در صورت لزوم
-if [ "$LOAD_SAMPLE_DATA" = "True" ]; then
-  echo "Loading sample data..."
-  python create_sample_data.py
-fi
-
-# اجرای سرور
+# اجرای سرور گونیکورن
 echo "Starting server..."
-exec gunicorn inventory_management.wsgi:application --bind 0.0.0.0:8000 
+gunicorn bibi.wsgi:application --bind 0.0.0.0:8000 --workers 3 

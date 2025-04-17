@@ -4,9 +4,19 @@ set -e
 
 # Wait for MySQL
 echo "Waiting for MySQL..."
-while ! nc -z db 3306; do
-  sleep 0.1
+max_retries=30
+count=0
+while ! nc -z db 3306 && [ $count -lt $max_retries ]; do
+  echo "Waiting for MySQL... (${count}/${max_retries})"
+  sleep 2
+  count=$((count+1))
 done
+
+if [ $count -eq $max_retries ]; then
+  echo "Error: Failed to connect to MySQL after ${max_retries} attempts"
+  exit 1
+fi
+
 echo "MySQL started"
 
 # Apply database migrations

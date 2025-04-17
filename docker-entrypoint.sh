@@ -25,4 +25,4 @@ fi
 
 # Start Gunicorn
 echo "Starting Gunicorn..."
-gunicorn bibi.wsgi:application --bind 0.0.0.0:8000
+exec gunicorn bibi.wsgi:application --bind 0.0.0.0:8000

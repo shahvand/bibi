@@ -29,15 +29,16 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 # Add Gunicorn
 RUN pip install gunicorn
 
-# Copy project
-COPY . .
-
-# Make entry point executable
-RUN chmod +x docker-entrypoint.sh
-
 # Create static and media directories
 RUN mkdir -p /home/app/static
 RUN mkdir -p /home/app/media
+
+# Copy entrypoint script first
+COPY docker-entrypoint.sh .
+RUN chmod +x docker-entrypoint.sh
+
+# Copy project
+COPY . .
 
 # Create non-root user
 RUN useradd -m appuser
@@ -46,4 +47,4 @@ USER appuser
 
 EXPOSE 8000
 
-ENTRYPOINT ["./docker-entrypoint.sh"] 
+ENTRYPOINT ["/bin/bash", "./docker-entrypoint.sh"] 

@@ -11,19 +11,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='Unit',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=50, unique=True, verbose_name='نام واحد')),
-                ('symbol', models.CharField(max_length=10, verbose_name='نماد')),
-            ],
-            options={
-                'verbose_name': 'واحد',
-                'verbose_name_plural': 'واحدها',
-                'ordering': ['name'],
-            },
-        ),
         migrations.AlterModelOptions(
             name='driver',
             options={'ordering': ['name'], 'verbose_name': 'راننده', 'verbose_name_plural': 'رانندگان'},

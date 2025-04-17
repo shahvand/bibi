@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('workflow', '0006_driver_notes'),
+        ('workflow', '0006_5_unit_model'),
     ]
 
     operations = [

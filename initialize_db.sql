@@ -1,6 +1,5 @@
--- ایجاد دیتابیس اگر وجود نداشته باشد
-CREATE DATABASE IF NOT EXISTS bibi_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE bibi_db;
+-- دیتابیس قبلاً توسط docker-entrypoint.sh ایجاد شده است
+-- USE bibi_db;
 
 -- جدول کاربران
 CREATE TABLE IF NOT EXISTS `auth_user` (

@@ -1,66 +1,41 @@
-FROM python:3.9 as builder
+FROM python:3.10-slim
 
-# تنظیم متغیرهای محیطی
+# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# ساخت محیط مجازی و نصب وابستگی‌ها
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+# Create app directory
+WORKDIR /home/app
 
-# تنظیم pip برای استفاده از میرور PyPI با تایم‌اوت بالاتر
-RUN mkdir -p ~/.pip && \
-    echo "[global]" > ~/.pip/pip.conf && \
-    echo "timeout = 180" >> ~/.pip/pip.conf && \
-    echo "index-url = https://pypi.org/simple" >> ~/.pip/pip.conf && \
-    echo "trusted-host = pypi.org files.pythonhosted.org" >> ~/.pip/pip.conf && \
-    echo "retries = 5" >> ~/.pip/pip.conf
-
-# کپی فقط فایل requirements برای کش بهتر
-WORKDIR /requirements
-COPY requirements-minimal.txt .
-
-# نصب وابستگی‌ها با استفاده از وابستگی‌های از پیش کامپایل شده
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir --prefer-binary -r requirements-minimal.txt
-
-# مرحله نهایی
-FROM python:3.9-slim
-
-# تنظیم متغیرهای محیطی
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-
-# نصب وابستگی‌های زمان اجرا
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        default-libmysqlclient-dev \
-        libcairo2 \
-        libpango-1.0-0 \
-        libpangocairo-1.0-0 \
-        libgdk-pixbuf2.0-0 \
-        shared-mime-info \
+# Install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    gettext \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# کپی محیط مجازی از مرحله قبل
-COPY --from=builder /opt/venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# تنظیم دایرکتوری کاری
-WORKDIR /home/app
+# Add Gunicorn
+RUN pip install gunicorn
 
-# کپی اسکریپت‌های SQL
-COPY initialize_db.sql add_sample_users.sql ./
-
-# کپی پروژه
+# Copy project
 COPY . .
 
-# ایجاد دایرکتوری‌های استاتیک و مدیا
-RUN mkdir -p /home/app/static /home/app/media
+# Make entry point executable
+RUN chmod +x docker-entrypoint.sh
 
-# تنظیم دسترسی به فایل entrypoint
-RUN chmod +x /home/app/docker-entrypoint.sh
+# Create static and media directories
+RUN mkdir -p /home/app/static
+RUN mkdir -p /home/app/media
 
-# اجرای برنامه
-CMD ["/bin/bash", "/home/app/docker-entrypoint.sh"] 
+# Create non-root user
+RUN useradd -m appuser
+RUN chown -R appuser:appuser /home/app
+USER appuser
+
+EXPOSE 8000
+
+ENTRYPOINT ["./docker-entrypoint.sh"] 

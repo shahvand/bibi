@@ -16,6 +16,9 @@ services:
       retries: 5
     networks:
       - bibi_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
   web:
     build: .
@@ -39,6 +42,9 @@ services:
       - 8000
     networks:
       - bibi_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
   nginx:
     image: nginx:1.21
@@ -52,6 +58,9 @@ services:
       - web
     networks:
       - bibi_network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
 networks:
   bibi_network:

@@ -1,45 +1,64 @@
-FROM python:3.10-slim
+FROM python:3.10-slim as builder
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PIP_DEFAULT_TIMEOUT=300
 
 # Create app directory
-WORKDIR /home/app
+WORKDIR /app
 
-# Install dependencies
+# Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
-    gettext \
     pkg-config \
     default-libmysqlclient-dev \
-    default-mysql-client \
     libcairo2-dev \
     libpango1.0-dev \
     libgdk-pixbuf2.0-dev \
     libffi-dev \
     shared-mime-info \
-    netcat-openbsd \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy pip configuration
 COPY pip.conf /etc/pip.conf
 
+# Install packages
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
-    pip install Django==4.2 mysqlclient==2.2.0 && \
-    pip install django-crispy-forms==2.0 crispy-bootstrap4==2022.1 && \
-    pip install Pillow==10.0.0 python-dotenv==1.0.0 gunicorn==21.2.0 && \
-    pip install django-debug-toolbar==4.2.0 pymemcache==4.0.0 django-filter==23.2 && \
-    pip install jdatetime==4.1.1 && \
-    pip install pycairo==1.24.0 && \
-    pip install WeasyPrint==60.1
+    for pkg in $(cat requirements.txt); do \
+    pip install --prefix=/install $pkg || echo "Failed to install $pkg"; \
+done
 
-# Create static and media directories
-RUN mkdir -p /home/app/static
-RUN mkdir -p /home/app/media
+# Final image
+FROM python:3.10-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Create app directory
+WORKDIR /home/app
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gettext \
+    default-mysql-client \
+    netcat-openbsd \
+    libcairo2 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libgdk-pixbuf2.0-0 \
+    shared-mime-info \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy installed Python packages
+COPY --from=builder /install /usr/local
 
 # Copy entrypoint script first
 COPY docker-entrypoint.sh .
@@ -47,6 +66,10 @@ RUN chmod +x docker-entrypoint.sh
 
 # Copy project
 COPY . .
+
+# Create static and media directories
+RUN mkdir -p /home/app/static
+RUN mkdir -p /home/app/media
 
 # Create non-root user
 RUN useradd -m appuser

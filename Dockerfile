@@ -50,6 +50,9 @@ ENV PATH="/opt/venv/bin:$PATH"
 # تنظیم دایرکتوری کاری
 WORKDIR /home/app
 
+# کپی اسکریپت‌های SQL
+COPY initialize_db.sql add_sample_users.sql ./
+
 # کپی پروژه
 COPY . .
 

@@ -2,12 +2,12 @@
 
 set -e
 
-# Wait for PostgreSQL
-echo "Waiting for PostgreSQL..."
-while ! nc -z db 5432; do
+# Wait for MySQL
+echo "Waiting for MySQL..."
+while ! nc -z db 3306; do
   sleep 0.1
 done
-echo "PostgreSQL started"
+echo "MySQL started"
 
 # Apply database migrations
 echo "Applying database migrations..."

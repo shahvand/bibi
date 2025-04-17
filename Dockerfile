@@ -4,10 +4,6 @@ FROM python:3.10-slim
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# Set DNS to Google's for better connectivity
-RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf
-RUN echo "nameserver 8.8.4.4" >> /etc/resolv.conf
-
 # Create app directory
 WORKDIR /home/app
 

@@ -7,7 +7,14 @@ ENV HOME=/home/app
 ENV APP_HOME=/home/app/web
 
 # Create directories
-RUN mkdir -p $HOME $APP_HOME $HOME/static $HOME/media
+RUN mkdir -p $HOME $APP_HOME $HOME/static $HOME/media \
+    && mkdir -p $HOME/static/css $HOME/static/js $HOME/static/img \
+    && mkdir -p $HOME/media/uploads $HOME/media/products
+
+# Create static files
+RUN echo "body { font-family: 'Vazirmatn', 'Tahoma', sans-serif; }" > $HOME/static/css/style.css \
+    && echo "body { direction: rtl; text-align: right; }" > $HOME/static/css/rtl.css \
+    && echo "// Custom JS for tooltips" > $HOME/static/js/custom.js
 
 # Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \

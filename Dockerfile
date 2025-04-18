@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     pkg-config \
     default-libmysqlclient-dev \
     libcairo2-dev \
+    netcat-traditional \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -43,6 +44,7 @@ RUN chmod +x /entrypoint.sh
 
 # Change ownership of application files
 RUN chown -R app:app $APP_HOME
+RUN chown app:app /entrypoint.sh
 
 # Switch to non-root user
 USER app

@@ -1,12 +1,6 @@
 # Git
 .git
 .gitignore
-.github
-
-# Docker
-.dockerignore
-Dockerfile
-docker-compose.yml
 
 # Python
 __pycache__/
@@ -30,26 +24,32 @@ var/
 .installed.cfg
 *.egg
 
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
 # Virtual Environment
 venv/
+env/
 ENV/
 
-# IDE specific files
+# IDE
 .idea/
 .vscode/
 *.swp
 *.swo
 
-# Django
-staticfiles/
-media/
-
-# Local development settings
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Logs
-logs/
-*.log 
+# Deployment
+.env
+.env.prod
+.env.dev
+.env.example
+nginx/ 

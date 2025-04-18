@@ -1,70 +1,52 @@
+version: '3.8'
+
 services:
   db:
-    image: mysql:8.0.42
+    image: mysql:8.0
+    container_name: bibi_db
+    restart: always
     volumes:
       - mysql_data:/var/lib/mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=Root_Super_Secure_2024_DB
-      - MYSQL_DATABASE=bibi_db
-      - MYSQL_USER=bibi_user
-      - MYSQL_PASSWORD=Root_Super_Secure_2024_DB
-    command: --default-authentication-plugin=mysql_native_password
+    env_file:
+      - .env
+    networks:
+      - bibi_network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - bibi_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
 
   web:
     build: .
-    volumes:
-      - ./:/home/app/
-      - static_volume:/home/app/static
-      - media_volume:/home/app/media
-    environment:
-      - DEBUG=False
-      - SECRET_KEY=django-secure-key-98765-zxcvbnm-qwerty-12345
-      - ALLOWED_HOSTS=localhost,127.0.0.1,example.com,www.example.com
-      - DB_NAME=bibi_db
-      - DB_USER=bibi_user
-      - DB_PASSWORD=Root_Super_Secure_2024_DB
-      - DB_HOST=db
-      - DB_PORT=3306
-      - LOAD_SAMPLE_DATA=True
+    restart: always
     depends_on:
       - db
-    expose:
-      - 8000
+    volumes:
+      - static_volume:/home/app/static
+      - media_volume:/home/app/media
+    env_file:
+      - .env
     networks:
       - bibi_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
 
   nginx:
-    image: nginx:1.21
+    image: nginx:1.23
+    container_name: bibi_nginx
+    restart: always
+    ports:
+      - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - static_volume:/home/app/static
       - media_volume:/home/app/media
-    ports:
-      - "80:80"
     depends_on:
       - web
     networks:
       - bibi_network
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
 
 networks:
   bibi_network:
-    driver: bridge
 
 volumes:
   mysql_data:

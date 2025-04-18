@@ -28,4 +28,4 @@ fi
 
 # Start server
 echo "Starting server..."
-exec gunicorn bibi.wsgi:application --bind 0.0.0.0:8000
+exec gunicorn inventory_management.wsgi:application --bind 0.0.0.0:8000

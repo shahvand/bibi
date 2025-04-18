@@ -18,9 +18,11 @@ RUN groupadd -r app && \
     chown -R app:app $HOME
 
 # Install dependencies
-RUN apt-get update && apt-get install -y \
-    postgresql-client \
-    netcat-traditional \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    pkg-config \
+    default-libmysqlclient-dev \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Set work directory

@@ -1,31 +1,48 @@
-FROM python:3.10-slim
-
-WORKDIR /home/app
+FROM python:3.11-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV HOME=/home/app
+ENV APP_HOME=/home/app/web
+
+# Create directory for the app user
+RUN mkdir -p $HOME
+
+# Create the appropriate directories
+RUN mkdir -p $APP_HOME $HOME/static $HOME/media
+
+# Create a non-root user and set ownership
+RUN groupadd -r app && \
+    useradd -r -g app app && \
+    chown -R app:app $HOME
 
 # Install dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
+RUN apt-get update && apt-get install -y \
     postgresql-client \
-    libpq-dev \
-    && apt-get clean \
+    netcat-traditional \
     && rm -rf /var/lib/apt/lists/*
 
-# Create directory for static files
-RUN mkdir -p /home/app/static /home/app/media
+# Set work directory
+WORKDIR $APP_HOME
 
-# Copy requirements and install dependencies
+# Install dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
 
 # Copy project
-COPY . .
+COPY . $APP_HOME
 
-# Run entrypoint script
-COPY ./entrypoint.sh .
-RUN chmod +x /home/app/entrypoint.sh
+# Copy entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-ENTRYPOINT ["/home/app/entrypoint.sh"] 
+# Change ownership of application files
+RUN chown -R app:app $APP_HOME
+
+# Switch to non-root user
+USER app
+
+# Run entrypoint
+ENTRYPOINT ["/entrypoint.sh"] 

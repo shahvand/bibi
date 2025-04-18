@@ -17,7 +17,7 @@ RUN groupadd -r app && \
     useradd -r -g app app && \
     chown -R app:app $HOME
 
-# Install dependencies
+# Install dependencies (only MySQL related)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     pkg-config \
@@ -47,4 +47,4 @@ RUN chown -R app:app $APP_HOME
 # Switch to non-root user
 USER app
 
-ENTRYPOINT ["/entrypoint.sh"] 
+ENTRYPOINT ["/entrypoint.sh"]

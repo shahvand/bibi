@@ -6,18 +6,10 @@ ENV PYTHONUNBUFFERED=1
 ENV HOME=/home/app
 ENV APP_HOME=/home/app/web
 
-# Create directory for the app user
-RUN mkdir -p $HOME
+# Create directories
+RUN mkdir -p $HOME $APP_HOME $HOME/static $HOME/media
 
-# Create the appropriate directories
-RUN mkdir -p $APP_HOME $HOME/static $HOME/media
-
-# Create a non-root user and set ownership
-RUN groupadd -r app && \
-    useradd -r -g app app && \
-    chown -R app:app $HOME
-
-# Install dependencies (only MySQL related)
+# Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     pkg-config \
@@ -30,21 +22,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set work directory
 WORKDIR $APP_HOME
 
-# Install dependencies
+# Copy requirements and install dependencies
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
-# Copy project
-COPY . $APP_HOME
-
-# Copy entrypoint and make it executable
+# Copy entrypoint script first and make it executable
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Change ownership of application files
-RUN chown -R app:app $APP_HOME
-RUN chown app:app /entrypoint.sh
+# Copy project files
+COPY . $APP_HOME
+
+# Create a non-root user and set permissions
+RUN groupadd -r app && \
+    useradd -r -g app app && \
+    chown -R app:app $HOME && \
+    chown app:app /entrypoint.sh
 
 # Switch to non-root user
 USER app

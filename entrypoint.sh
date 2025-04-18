@@ -1,9 +1,14 @@
 #!/bin/bash
 
+# Set default values for environment variables if not set
+DB_HOST=${DATABASE_HOST:-db}
+DB_PORT=${DATABASE_PORT:-3306}
+
 # Wait for MySQL to be ready
-echo "Waiting for MySQL..."
-while ! nc -z $DATABASE_HOST $DATABASE_PORT; do
+echo "Waiting for MySQL at $DB_HOST:$DB_PORT..."
+while ! nc -z $DB_HOST $DB_PORT; do
     sleep 1
+    echo "Still waiting for MySQL..."
 done
 echo "MySQL started"
 

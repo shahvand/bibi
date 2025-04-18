@@ -37,7 +37,7 @@ RUN pip install --upgrade pip && \
 # Copy project
 COPY . $APP_HOME
 
-# Copy entrypoint
+# Copy entrypoint and make it executable
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
@@ -47,5 +47,4 @@ RUN chown -R app:app $APP_HOME
 # Switch to non-root user
 USER app
 
-# Run entrypoint
 ENTRYPOINT ["/entrypoint.sh"] 

@@ -32,8 +32,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-key-change-in-product
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # ALLOWED_HOSTS configuration - fixed version
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost 127.0.0.1 93.118.119.250').split()
-
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 

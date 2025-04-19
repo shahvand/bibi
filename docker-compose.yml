@@ -38,6 +38,7 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - static_volume:/home/app/static
@@ -46,6 +47,8 @@ services:
       - web
     networks:
       - bibi_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 networks:
   bibi_network:

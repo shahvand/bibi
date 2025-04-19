@@ -43,8 +43,6 @@ services:
       - media_volume:/home/app/media
     depends_on:
       - web
-    networks:
-      - bibi_network
 
 networks:
   bibi_network:

@@ -1,157 +1,76 @@
-# Inventory Workflow Management System
+# سیستم مدیریت انبار بیبی
 
-This is a Django-based inventory workflow management system designed to handle order requests, approvals, delivery tracking, and reporting for inventory management across multiple branches.
+سیستم مدیریت انبار بیبی یک نرم‌افزار مبتنی بر وب برای مدیریت موجودی، سفارشات و ارسال کالا می‌باشد.
 
-## Features
+## امکانات
 
-- User role-based access control (Requester, Warehouse Manager, Accountant, Admin)
-- Order workflow management (requesting, approving, delivering, receiving)
-- Product management
-- Driver management
-- Order tracking and reporting
-- Invoice generation
+- مدیریت محصولات، موجودی و کمترین موجودی مجاز
+- ثبت و پیگیری سفارشات
+- مدیریت رانندگان برای ارسال کالا
+- داشبورد مدیریتی برای نظارت بر عملکرد
+- کاربران با سطوح دسترسی مختلف
+- گزارش‌گیری از عملیات انبار
 
-## System Requirements
+## پیش‌نیازها
 
-- Python 3.8+
-- MySQL database
-- Django 5.2+
+- Docker و Docker Compose
+- Git
 
-## Installation and Setup
+## نصب و راه‌اندازی
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd inventory-management
-```
-
-2. Create a virtual environment and activate it:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-4. Create a `.env` file in the project root with your database settings:
-```
-DB_NAME=your_db_name
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-DB_HOST=localhost
-DB_PORT=3306
-```
-
-5. Run migrations:
-```bash
-python manage.py makemigrations workflow
-python manage.py migrate
-```
-
-6. Create a superuser:
-```bash
-python manage.py createsuperuser
-```
-
-7. Start the development server:
-```bash
-python manage.py runserver
-```
-
-## User Types and Permissions
-
-- **Requester**: Branch representatives who can place orders and confirm receipt of goods
-- **Warehouse Manager**: Users who approve/reject orders, adjust quantities, set prices, and manage products and drivers
-- **Accountant**: Users who have read-only access to orders and can generate reports
-- **Admin**: Superusers who have full system access
-
-## Workflow Process
-
-1. **Order Request**:
-   - Requester fills out an order form specifying products, quantities, etc.
-   - Order is saved with 'PENDING' status
-
-2. **Order Approval**:
-   - Warehouse Manager reviews pending orders
-   - Manager can adjust quantities, set prices, add notes
-   - Order is either approved or rejected
-
-3. **Order Delivery**:
-   - Warehouse Manager marks the order as delivered
-   - Driver is assigned for delivery
-   - Order status changes to 'DELIVERED'
-
-4. **Order Receipt**:
-   - Requester confirms receipt of goods
-   - Order status changes to 'RECEIVED'
-
-5. **Reporting**:
-   - Accountants can generate various reports on orders, products, etc.
-   - Invoice generation is available for completed orders
-
-## Project Structure
-
-- `workflow/models.py`: Database models
-- `workflow/views.py`: View functions and classes
-- `workflow/forms.py`: Form classes
-- `workflow/urls.py`: URL routing
-- `templates/workflow/`: HTML templates
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Contributors
-
-[Your Name/Organization]
-
-## استقرار با Docker
-
-این پروژه می‌تواند به راحتی با استفاده از Docker راه‌اندازی شود:
-
-### پیش‌نیازها
-
-- Docker
-- Docker Compose
-
-### مراحل راه‌اندازی
-
-1. ابتدا فایل `.env` را بر اساس نمونه `.env.example` ایجاد کنید:
+### 1. دریافت کد از مخزن
 
 ```bash
-cp .env.example .env
+git clone https://github.com/username/bibi.git
+cd bibi
 ```
 
-2. در صورت نیاز، مقادیر فایل `.env` را ویرایش کنید.
+### 2. ساخت و راه‌اندازی با یک دستور
 
-3. با استفاده از Docker Compose، پروژه را راه‌اندازی کنید:
+فقط کافیست اسکریپت `clean-start.sh` (در لینوکس/مک) یا `clean-start.bat` (در ویندوز) را اجرا کنید:
 
+**لینوکس/مک**:
 ```bash
-docker-compose up -d
+chmod +x clean-start.sh
+./clean-start.sh
 ```
 
-4. برای بررسی لاگ‌ها:
-
-```bash
-docker-compose logs -f
+**ویندوز**:
+```
+clean-start.bat
 ```
 
-5. برای توقف سرویس‌ها:
+این اسکریپت به صورت خودکار:
+- تمام کانتینرها و ولوم‌های قبلی را پاک می‌کند
+- تصاویر داکر را از ابتدا می‌سازد
+- سرویس‌ها را راه‌اندازی می‌کند
 
-```bash
-docker-compose down
-```
+### 3. دسترسی به نرم‌افزار
 
-### نکات مهم
+پس از راه‌اندازی کامل، می‌توانید از طریق آدرس زیر به نرم‌افزار دسترسی پیدا کنید:
+- آدرس: http://localhost یا http://127.0.0.1
+- نام کاربری: admin
+- رمز عبور: admin_password
 
-- دیتابیس در یک volume به نام `mysql_data` ذخیره می‌شود که بین اجراهای مختلف حفظ می‌شود.
-- برای راه‌اندازی مجدد با داده‌های جدید، می‌توانید volume را حذف کنید:
+## ساختار پروژه
 
-```bash
-docker-compose down -v
-```
+- `workflow/`: اپلیکیشن اصلی Django
+- `templates/`: قالب‌های HTML
+- `static/`: فایل‌های استاتیک (CSS, JS, تصاویر)
+- `media/`: فایل‌های آپلود شده
+- `docker-compose.yml`: پیکربندی داکر کامپوز
+- `Dockerfile`: تنظیمات ساخت تصویر داکر
+- `entrypoint.sh`: اسکریپت راه‌اندازی داخل کانتینر
+- `init-db.sql`: اسکریپت راه‌اندازی اولیه دیتابیس
 
-- برای بارگذاری داده‌های نمونه، مقدار `LOAD_SAMPLE_DATA` را در فایل `.env` یا `docker-compose.yml` به `True` تغییر دهید. 
+## متدلوژی توسعه
+
+- زبان برنامه‌نویسی: Python
+- فریم‌ورک: Django
+- دیتابیس: MySQL
+- سرور وب: Nginx + Gunicorn
+- کانتینرسازی: Docker
+
+## لایسنس
+
+کلیه حقوق این نرم‌افزار محفوظ است. 

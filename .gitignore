@@ -44,3 +44,13 @@ staticfiles/
 # OS specific files
 .DS_Store
 Thumbs.db
+
+# Docker files
+.dockerignore
+
+# Web files
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+/staticfiles/

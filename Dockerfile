@@ -16,6 +16,13 @@ RUN echo "body { font-family: 'Vazirmatn', 'Tahoma', sans-serif; }" > $HOME/stat
     && echo "body { direction: rtl; text-align: right; }" > $HOME/static/css/rtl.css \
     && echo "// Custom JS for tooltips" > $HOME/static/js/custom.js
 
+# Install Django and copy admin static files to ensure they're available
+RUN pip install django && \
+    DJANGO_PATH=$(pip show django | grep Location | awk '{print $2}') && \
+    mkdir -p $HOME/static/admin && \
+    cp -r $DJANGO_PATH/django/contrib/admin/static/admin/* $HOME/static/admin/ && \
+    chmod -R 755 $HOME/static
+
 # Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \

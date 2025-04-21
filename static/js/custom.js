@@ -111,4 +111,51 @@ document.addEventListener('DOMContentLoaded', function() {
             window.print();
         });
     });
+    
+    // Fix for product form submission
+    const productForm = document.querySelector('form[action*="product"]');
+    if (productForm) {
+        // Log that we found the product form
+        console.log('Product form found:', productForm);
+        
+        // Add explicit submit handler
+        productForm.addEventListener('submit', function(event) {
+            // Prevent the default form submit to debug first
+            console.log('Form submit triggered');
+            
+            // Check for any validation issues
+            const requiredFields = productForm.querySelectorAll('[required]');
+            let hasErrors = false;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    console.log('Field is empty:', field);
+                    field.classList.add('is-invalid');
+                    hasErrors = true;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            if (hasErrors) {
+                event.preventDefault();
+                console.log('Form has validation errors');
+                return;
+            }
+            
+            // If everything is valid, ensure the form submits properly
+            console.log('Form is valid, submitting...');
+        });
+        
+        // Check for save button and add click handler
+        const saveButton = productForm.querySelector('button[type="submit"]');
+        if (saveButton) {
+            console.log('Save button found:', saveButton);
+            saveButton.addEventListener('click', function(e) {
+                console.log('Save button clicked');
+                // Programmatically submit the form
+                productForm.submit();
+            });
+        }
+    }
 }); 

@@ -53,8 +53,7 @@ class Product(models.Model):
     code = models.CharField(max_length=100, unique=True, verbose_name="کد")
     description = models.TextField(blank=True, null=True, verbose_name="توضیحات")
     price_per_unit = models.DecimalField(max_digits=12, decimal_places=0, verbose_name="قیمت واحد")
-    current_stock = models.DecimalField(max_digits=10, decimal_places=0, default=0, verbose_name="موجودی فعلی")
-    min_stock = models.DecimalField(max_digits=10, decimal_places=0, default=0, verbose_name="حداقل موجودی")
+    unit_id = models.CharField(max_length=20, default="pc", verbose_name="شناسه واحد") 
     unit = models.CharField(max_length=20, verbose_name="واحد (قدیمی)")
     unit_ref = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="واحد")
     

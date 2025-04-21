@@ -11,15 +11,13 @@ class UserRegisterForm(UserCreationForm):
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['title', 'code', 'description', 'price_per_unit', 'current_stock', 'min_stock', 'unit_ref']
+        fields = ['title', 'code', 'description', 'price_per_unit', 'unit_ref']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'code': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
             'price_per_unit': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
-            'current_stock': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
-            'min_stock': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
-            'unit_ref': forms.Select(attrs={'class': 'form-select'}),
+            'unit_ref': forms.Select(attrs={'class': 'form-select', 'required': 'required'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -27,6 +25,36 @@ class ProductForm(forms.ModelForm):
         # قالب‌بندی قیمت بدون نقطه اعشار و صفرهای اضافی در حالت ویرایش
         if self.instance and self.instance.pk:
             self.initial['price_per_unit'] = format_price_input(self.instance.price_per_unit)
+            
+        # تنظیم واحد به صورت اجباری
+        self.fields['unit_ref'].required = True
+        
+        # اگر هیچ واحدی انتخاب نشده و واحدی در پایگاه داده وجود دارد، واحد عدد را به عنوان پیش‌فرض انتخاب می‌کنیم
+        if not self.instance.unit_ref and Unit.objects.exists():
+            try:
+                default_unit = Unit.objects.filter(name__icontains='عدد').first() or Unit.objects.first()
+                if default_unit:
+                    self.initial['unit_ref'] = default_unit.pk
+            except:
+                pass
+    
+    def save(self, commit=True):
+        # ذخیره مدل بدون commit
+        instance = super().save(commit=False)
+        
+        # تنظیم فیلد واحد بر اساس واحد انتخاب شده
+        if instance.unit_ref:
+            instance.unit = instance.unit_ref.symbol
+            instance.unit_id = str(instance.unit_ref.id)  # تنظیم unit_id بر اساس شناسه واحد انتخاب شده
+        elif not instance.unit:
+            instance.unit = "عدد"  # مقدار پیش‌فرض
+            instance.unit_id = "pc"  # مقدار پیش‌فرض برای unit_id
+            
+        # ذخیره نهایی اگر commit درخواست شده باشد
+        if commit:
+            instance.save()
+            
+        return instance
 
 class DriverForm(forms.ModelForm):
     class Meta:

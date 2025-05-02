@@ -54,7 +54,9 @@
                                             <div class="input-group">
                                                 <input type="number" step="any" min="0.01" name="{{ form.requested_quantity.html_name }}" 
                                                        id="{{ form.requested_quantity.id_for_label }}" class="form-control" 
-                                                       value="{{ form.requested_quantity.value|default:1 }}" required>
+                                                       value="{{ form.requested_quantity.value|default:1 }}" required
+                                                       oninvalid="this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.')"
+                                                       oninput="this.setCustomValidity('')">
                                                 <div class="input-group-append">
                                                     <span class="input-group-text unit-label">واحد</span>
                                                 </div>
@@ -62,6 +64,7 @@
                                             {% if form.requested_quantity.errors %}
                                                 <div class="invalid-feedback d-block">{{ form.requested_quantity.errors }}</div>
                                             {% endif %}
+                                            <small class="form-text text-muted">تعداد رقم‌ها نباید بیشتر از 15 باشد.</small>
                                         </div>
                                     </div>
                                     
@@ -142,11 +145,14 @@
                     <label for="{{ formset.empty_form.requested_quantity.id_for_label }}">مقدار درخواستی:</label>
                     <div class="input-group">
                         <input type="number" step="any" min="0.01" name="{{ formset.empty_form.requested_quantity.html_name }}" 
-                               id="{{ formset.empty_form.requested_quantity.id_for_label }}" class="form-control" value="1" required>
+                               id="{{ formset.empty_form.requested_quantity.id_for_label }}" class="form-control" value="1" required
+                               oninvalid="this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.')"
+                               oninput="this.setCustomValidity('')">
                         <div class="input-group-append">
                             <span class="input-group-text unit-label">واحد</span>
                         </div>
                     </div>
+                    <small class="form-text text-muted">تعداد رقم‌ها نباید بیشتر از 15 باشد.</small>
                 </div>
             </div>
             
@@ -259,9 +265,14 @@
                     <label for="{{ formset.empty_form.requested_quantity.id_for_label }}">مقدار درخواستی:</label>
                     <div class="input-group">
                         <input type="number" step="any" min="0.01" name="{{ formset.empty_form.requested_quantity.html_name }}"
-                               id="{{ formset.empty_form.requested_quantity.id_for_label }}" class="form-control" value="1" required>
-                        <span class="input-group-text product-unit">واحد</span>
+                               id="{{ formset.empty_form.requested_quantity.id_for_label }}" class="form-control" value="1" required
+                               oninvalid="this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.')"
+                               oninput="this.setCustomValidity('')">
+                        <div class="input-group-append">
+                            <span class="input-group-text unit-label">واحد</span>
+                        </div>
                     </div>
+                    <small class="form-text text-muted">تعداد رقم‌ها نباید بیشتر از 15 باشد.</small>
                 </div>
             </div>
             <div class="product-details small text-muted">
@@ -280,6 +291,25 @@
         const addButton = document.getElementById('add-item');
         const totalFormsInput = document.querySelector('#id_form-TOTAL_FORMS');
         const emptyForm = document.getElementById('empty-form');
+        
+        // اعتبارسنجی تعداد رقم‌های مجاز
+        function validateQuantityFields() {
+            document.querySelectorAll('input[type="number"]').forEach(input => {
+                input.addEventListener('input', function() {
+                    // بررسی تعداد رقم‌های ورودی
+                    const value = this.value.replace(/[^0-9]/g, '');
+                    if (value.length > 15) {
+                        this.setCustomValidity('تعداد رقم‌ها نباید بیشتر از 15 باشد.');
+                        this.reportValidity();
+                    } else {
+                        this.setCustomValidity('');
+                    }
+                });
+            });
+        }
+        
+        // اجرای اعتبارسنجی برای فیلدهای موجود
+        validateQuantityFields();
         
         function updateUnitLabels() {
             document.querySelectorAll('.product-select').forEach(select => {
@@ -322,6 +352,9 @@
                     }
                 });
             });
+            
+            // اعتبارسنجی فیلدهای جدید
+            validateQuantityFields();
         }
         
         function updateFormIndexes() {
@@ -372,13 +405,22 @@
                     isValid = false;
                     quantityInput.classList.add('is-invalid');
                 } else {
-                    quantityInput.classList.remove('is-invalid');
+                    // بررسی تعداد رقم‌های ورودی
+                    const value = quantityInput.value.replace(/[^0-9]/g, '');
+                    if (value.length > 15) {
+                        isValid = false;
+                        quantityInput.classList.add('is-invalid');
+                        quantityInput.setCustomValidity('تعداد رقم‌ها نباید بیشتر از 15 باشد.');
+                        quantityInput.reportValidity();
+                    } else {
+                        quantityInput.classList.remove('is-invalid');
+                    }
                 }
             });
             
             if (!isValid) {
                 e.preventDefault();
-                alert('لطفاً تمام فیلدهای ضروری را پر کنید.');
+                alert('لطفاً تمام فیلدهای ضروری را با مقادیر معتبر پر کنید.');
                 return false;
             }
         });

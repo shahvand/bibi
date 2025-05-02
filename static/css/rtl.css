@@ -159,4 +159,36 @@ body {
 .me-1, .me-2, .me-3, .me-4, .me-5 {
     margin-left: var(--bs-margin) !important;
     margin-right: 0 !important;
+}
+
+/* Select2 RTL customizations */
+.select2-container--default .select2-selection--single {
+    border-radius: 4px;
+    height: 38px;
+    padding: 5px 10px;
+    text-align: right;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    left: 10px;
+    right: auto;
+}
+
+.select2-dropdown {
+    text-align: right;
+}
+
+.select2-search--dropdown .select2-search__field {
+    padding: 5px 10px;
+    direction: rtl;
+}
+
+.select2-container--open .select2-dropdown--below {
+    border-top: none;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.select2-results__option {
+    padding: 6px 10px;
 } 

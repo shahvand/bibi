@@ -93,9 +93,55 @@ document.addEventListener('DOMContentLoaded', function() {
     function initializeSelect2() {
         if (typeof $.fn.select2 !== 'undefined') {
             $('.product-select').select2({
-                placeholder: 'Select a product',
+                placeholder: 'انتخاب محصول...',
                 allowClear: true,
-                width: '100%'
+                width: '100%',
+                language: {
+                    inputTooShort: function () {
+                        return "لطفا برای جستجو حداقل یک حرف وارد کنید";
+                    },
+                    noResults: function () {
+                        return "نتیجه‌ای یافت نشد";
+                    },
+                    searching: function () {
+                        return "در حال جستجو...";
+                    }
+                },
+                dir: "rtl",
+                minimumInputLength: 1,
+                // تابع جستجوی سفارشی برای بهبود نتایج جستجو
+                matcher: function(params, data) {
+                    // اگر هیچ متنی برای جستجو وارد نشده باشد، همه گزینه‌ها را نمایش بده
+                    if ($.trim(params.term) === '') {
+                        return data;
+                    }
+
+                    // اگر داده‌ای وجود نداشته باشد، هیچ چیزی نمایش نده
+                    if (typeof data.text === 'undefined') {
+                        return null;
+                    }
+
+                    // عبارت جستجو را به حروف کوچک تبدیل کن
+                    var term = params.term.toLowerCase();
+                    
+                    // داده‌های جستجو را از داخل data-search بخوان
+                    var searchData = data.element.getAttribute('data-search') || '';
+                    searchData = searchData.toLowerCase();
+                    
+                    // اگر متن جستجو شده در عنوان یا کد محصول یافت شود، آن را نمایش بده
+                    if (data.text.toLowerCase().indexOf(term) > -1 || 
+                        searchData.indexOf(term) > -1) {
+                        return data;
+                    }
+
+                    // در غیر این صورت نمایش نده
+                    return null;
+                }
+            });
+            
+            // اضافه کردن قابلیت انتخاب با کلیک روی گزینه‌ها
+            $(document).on('select2:open', () => {
+                document.querySelector('.select2-search__field').focus();
             });
         }
     }

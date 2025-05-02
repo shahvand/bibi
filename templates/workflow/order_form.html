@@ -30,10 +30,14 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="{{ form.product.id_for_label }}">محصول:</label>
-                                            <select name="{{ form.product.html_name }}" id="{{ form.product.id_for_label }}" class="form-control product-select" required>
+                                            <select name="{{ form.product.html_name }}" id="{{ form.product.id_for_label }}" class="form-control product-select" required
+                                                    data-placeholder="برای جستجوی محصول تایپ کنید...">
                                                 <option value="">-- انتخاب محصول --</option>
                                                 {% for product in products %}
-                                                    <option value="{{ product.id }}" data-unit="{{ product.unit }}">
+                                                    <option value="{{ product.id }}" 
+                                                            data-code="{{ product.code }}" 
+                                                            data-unit="{{ product.unit }}"
+                                                            data-search="{{ product.title }} {{ product.code }}">
                                                         {{ product.title }} ({{ product.code }})
                                                     </option>
                                                 {% endfor %}
@@ -118,10 +122,14 @@
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="{{ formset.empty_form.product.id_for_label }}">محصول:</label>
-                    <select name="{{ formset.empty_form.product.html_name }}" id="{{ formset.empty_form.product.id_for_label }}" class="form-control product-select" required>
+                    <select name="{{ formset.empty_form.product.html_name }}" id="{{ formset.empty_form.product.id_for_label }}" class="form-control product-select" required
+                            data-placeholder="برای جستجوی محصول تایپ کنید...">
                         <option value="">-- انتخاب محصول --</option>
                         {% for product in products %}
-                            <option value="{{ product.id }}" data-unit="{{ product.unit }}">
+                            <option value="{{ product.id }}" 
+                                    data-code="{{ product.code }}" 
+                                    data-unit="{{ product.unit }}"
+                                    data-search="{{ product.title }} {{ product.code }}">
                                 {{ product.title }} ({{ product.code }})
                             </option>
                         {% endfor %}
@@ -183,12 +191,14 @@
                     <label for="{{ form.product.id_for_label }}">محصول:</label>
                     <select name="{{ form.product.html_name }}" 
                             id="{{ form.product.id_for_label }}" 
-                            class="form-control product-select" required>
+                            class="form-control product-select" required
+                            data-placeholder="برای جستجوی محصول تایپ کنید...">
                         <option value="">-- انتخاب محصول --</option>
                         {% for product in products %}
                         <option value="{{ product.id }}" 
                                 data-code="{{ product.code }}" 
-                                data-unit="{{ product.unit }}">
+                                data-unit="{{ product.unit }}"
+                                data-search="{{ product.title }} {{ product.code }}">
                             {{ product.title }} ({{ product.code }})
                         </option>
                         {% endfor %}
@@ -232,12 +242,14 @@
                     <label for="{{ formset.empty_form.product.id_for_label }}">محصول:</label>
                     <select name="{{ formset.empty_form.product.html_name }}" 
                             id="{{ formset.empty_form.product.id_for_label }}" 
-                            class="form-control product-select" required>
+                            class="form-control product-select" required
+                            data-placeholder="برای جستجوی محصول تایپ کنید...">
                         <option value="">-- انتخاب محصول --</option>
                         {% for product in products %}
                         <option value="{{ product.id }}" 
                                 data-code="{{ product.code }}" 
-                                data-unit="{{ product.unit }}">
+                                data-unit="{{ product.unit }}"
+                                data-search="{{ product.title }} {{ product.code }}">
                             {{ product.title }} ({{ product.code }})
                         </option>
                         {% endfor %}

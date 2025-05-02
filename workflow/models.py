@@ -52,7 +52,7 @@ class Product(models.Model):
     title = models.CharField(max_length=255, verbose_name="عنوان")
     code = models.CharField(max_length=100, unique=True, verbose_name="کد")
     description = models.TextField(blank=True, null=True, verbose_name="توضیحات")
-    price_per_unit = models.DecimalField(max_digits=12, decimal_places=0, verbose_name="قیمت واحد")
+    price_per_unit = models.DecimalField(max_digits=15, decimal_places=0, verbose_name="قیمت واحد")
     unit_id = models.CharField(max_length=20, default="pc", verbose_name="شناسه واحد") 
     unit = models.CharField(max_length=20, verbose_name="واحد (قدیمی)")
     unit_ref = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="واحد")
@@ -139,9 +139,9 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     
-    requested_quantity = models.DecimalField(max_digits=10, decimal_places=0)
-    approved_quantity = models.DecimalField(max_digits=10, decimal_places=0, null=True, blank=True)
-    price_per_unit = models.DecimalField(max_digits=10, decimal_places=0, null=True, blank=True)
+    requested_quantity = models.DecimalField(max_digits=15, decimal_places=0)
+    approved_quantity = models.DecimalField(max_digits=15, decimal_places=0, null=True, blank=True)
+    price_per_unit = models.DecimalField(max_digits=15, decimal_places=0, null=True, blank=True)
     notes = models.TextField(blank=True, null=True)
     
     def __str__(self):

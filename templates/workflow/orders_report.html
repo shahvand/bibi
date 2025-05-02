@@ -93,7 +93,7 @@
                                 {% elif order.status == 'SHIPPING' %}
                                 <span class="badge bg-warning">در حال ارسال</span>
                                 {% elif order.status == 'DELIVERED' %}
-                                <span class="badge bg-success">تحویل داده شده</span>
+                                <span class="badge bg-success">تحویل راننده شده</span>
                                 {% elif order.status == 'REJECTED' %}
                                 <span class="badge bg-danger">رد شده</span>
                                 {% elif order.status == 'CANCELLED' %}
@@ -102,7 +102,7 @@
                                 <span class="badge bg-success">دریافت شده</span>
                                 {% endif %}
                             </td>
-                            <td>{{ order.total_price|format_price }} تومان</td>
+                            <td>{{ order.total_price|format_price }}</td>
                             <td>
                                 <div class="btn-group" role="group">
                                     <a href="{% url 'order-detail' order.id %}" class="btn btn-sm btn-info" title="مشاهده جزئیات">
@@ -124,7 +124,7 @@
                     <tfoot class="bg-light">
                         <tr>
                             <td colspan="7" class="text-left font-weight-bold">مجموع</td>
-                            <td class="font-weight-bold">{{ total_revenue|format_price }} تومان</td>
+                            <td class="font-weight-bold">{{ total_revenue|format_price }}</td>
                             <td></td>
                         </tr>
                     </tfoot>
@@ -158,7 +158,7 @@
                             </div>
                             <div class="d-flex justify-content-between">
                                 <strong>مجموع مبلغ:</strong>
-                                <span>{{ total_revenue|format_price }} تومان</span>
+                                <span>{{ total_revenue|format_price }}</span>
                             </div>
                         </div>
                     </div>

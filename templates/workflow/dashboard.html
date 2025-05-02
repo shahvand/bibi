@@ -1,4 +1,5 @@
 {% extends 'workflow/base.html' %}
+{% load jdate_filters %}
 
 {% block title %}داشبورد - سیستم مدیریت انبار{% endblock %}
 
@@ -32,7 +33,7 @@
             <div class="col-md-4 mb-4">
                 <div class="card">
                     <div class="card-body text-center">
-                        <h5 class="card-title">سفارش‌های تحویل داده شده</h5>
+                        <h5 class="card-title">سفارش‌های تحویل به راننده شده</h5>
                         <p class="display-4">{{ delivered_orders }}</p>
                         <a href="{% url 'order-list' %}?status=DELIVERED" class="btn btn-info">مشاهده سفارش‌ها</a>
                     </div>
@@ -125,7 +126,7 @@
                             <tr>
                                 <td>{{ order.id }}</td>
                                 <td>{{ order.requester.username }}</td>
-                                <td>{{ order.order_date|date:"Y-m-d H:i" }}</td>
+                                <td>{{ order.order_date|to_jalali }}</td>
                                 <td>
                                     {% if order.status == 'PENDING' %}
                                         <span class="badge bg-warning">در انتظار</span>
@@ -134,7 +135,7 @@
                                     {% elif order.status == 'REJECTED' %}
                                         <span class="badge bg-danger">رد شده</span>
                                     {% elif order.status == 'DELIVERED' %}
-                                        <span class="badge bg-info">تحویل داده شده</span>
+                                        <span class="badge bg-info">تحویل راننده شده</span>
                                     {% elif order.status == 'RECEIVED' %}
                                         <span class="badge bg-primary">دریافت شده</span>
                                     {% endif %}

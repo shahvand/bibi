@@ -55,7 +55,7 @@
                     <div class="card bg-info text-white">
                         <div class="card-body">
                             <h5 class="card-title">درآمد کل</h5>
-                            <h3 class="card-text">{{ total_revenue|format_price }} تومان</h3>
+                            <h3 class="card-text">{{ total_revenue|format_price }}</h3>
                         </div>
                     </div>
                 </div>
@@ -73,7 +73,7 @@
                             <h5 class="card-title">میانگین سفارش</h5>
                             <h3 class="card-text">
                                 {% if orders|length > 0 %}
-                                    {{ total_revenue|format_price }} تومان
+                                    {{ total_revenue|format_price }}
                                 {% else %}
                                     0 تومان
                                 {% endif %}
@@ -106,9 +106,15 @@
                             <td>{{ order.delivered_at|to_jalali|default:"-" }}</td>
                             <td>{{ order.items.count }}</td>
                             <td>
-                                <span class="badge bg-success">تحویل داده شده</span>
+                                {% if order.status == 'SHIPPING' %}
+                                <span class="badge bg-warning">در حال ارسال</span>
+                                {% elif order.status == 'DELIVERED' %}
+                                <span class="badge bg-success">تحویل راننده شده</span>
+                                {% elif order.status == 'REJECTED' %}
+                                <span class="badge bg-danger">رد شده</span>
+                                {% endif %}
                             </td>
-                            <td>{{ order.total_price|format_price }} تومان</td>
+                            <td>{{ order.total_price|format_price }}</td>
                             <td>
                                 <div class="btn-group" role="group">
                                     <a href="{% url 'order-detail' order.id %}" class="btn btn-sm btn-info" title="مشاهده جزئیات">
@@ -130,7 +136,7 @@
                     <tfoot class="bg-light">
                         <tr>
                             <td colspan="6" class="text-left font-weight-bold">مجموع</td>
-                            <td class="font-weight-bold">{{ total_revenue|format_price }} تومان</td>
+                            <td class="font-weight-bold">{{ total_revenue|format_price }}</td>
                             <td></td>
                         </tr>
                     </tfoot>
@@ -157,7 +163,7 @@
                                     {% for month, revenue in monthly_revenue.items %}
                                     <tr>
                                         <td>{{ month|to_jalali_month_year }}</td>
-                                        <td>{{ revenue|format_price }} تومان</td>
+                                        <td>{{ revenue|format_price }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>

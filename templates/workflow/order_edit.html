@@ -38,7 +38,7 @@
                                             {% elif order.status == 'APPROVED' %}
                                             <span class="badge bg-info">تایید شده</span>
                                             {% elif order.status == 'DELIVERED' %}
-                                            <span class="badge bg-success">تحویل داده شده</span>
+                                            <span class="badge bg-success">تحویل راننده شده</span>
                                             {% endif %}
                                         </td>
                                     </tr>
@@ -127,7 +127,9 @@
                                                class="form-control" min="0.01" step="any" 
                                                value="{{ form.requested_quantity.value|default:1 }}"
                                                oninvalid="this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.')"
-                                               oninput="this.setCustomValidity('')">
+                                               oninput="this.setCustomValidity('')"
+                                               pattern="[0-9]*\.?[0-9]+"
+                                               title="لطفاً یک عدد صحیح یا اعشاری وارد کنید که تعداد ارقام آن از 15 بیشتر نباشد">
                                         {{ form.requested_quantity.errors }}
                                         {{ form.approved_quantity }}
                                     </td>
@@ -140,7 +142,9 @@
                                                value="{{ form.approved_quantity.value|default:0 }}" 
                                                {% if form.instance.is_rejected %}disabled{% endif %}
                                                oninvalid="this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.')"
-                                               oninput="this.setCustomValidity('')">
+                                               oninput="this.setCustomValidity('')"
+                                               pattern="[0-9]*\.?[0-9]+"
+                                               title="لطفاً یک عدد صحیح یا اعشاری وارد کنید که تعداد ارقام آن از 15 بیشتر نباشد">
                                         {{ form.approved_quantity.errors }}
                                     </td>
                                     <td>
@@ -192,7 +196,9 @@
                                                class="form-control" min="0.01" step="any" 
                                                value="{{ form.requested_quantity.value|default:1 }}"
                                                oninvalid="this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.')"
-                                               oninput="this.setCustomValidity('')">
+                                               oninput="this.setCustomValidity('')"
+                                               pattern="[0-9]*\.?[0-9]+"
+                                               title="لطفاً یک عدد صحیح یا اعشاری وارد کنید که تعداد ارقام آن از 15 بیشتر نباشد">
                                         {{ form.requested_quantity.errors }}
                                         <input type="hidden" name="{{ form.approved_quantity.html_name }}" 
                                                id="{{ form.approved_quantity.auto_id }}" value="1">
@@ -253,7 +259,9 @@
                    id="id___PREFIX__-requested_quantity" 
                    class="form-control" min="0.01" step="any" value="1"
                    oninvalid="this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.')"
-                   oninput="this.setCustomValidity('')">
+                   oninput="this.setCustomValidity('')"
+                   pattern="[0-9]*\.?[0-9]+"
+                   title="لطفاً یک عدد صحیح یا اعشاری وارد کنید که تعداد ارقام آن از 15 بیشتر نباشد">
             <input type="hidden" name="__PREFIX__-approved_quantity" 
                    id="id___PREFIX__-approved_quantity" value="1">
         </td>
@@ -264,7 +272,9 @@
                    id="id___PREFIX__-approved_quantity" 
                    class="form-control" min="0" step="any" value="1"
                    oninvalid="this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.')"
-                   oninput="this.setCustomValidity('')">
+                   oninput="this.setCustomValidity('')"
+                   pattern="[0-9]*\.?[0-9]+"
+                   title="لطفاً یک عدد صحیح یا اعشاری وارد کنید که تعداد ارقام آن از 15 بیشتر نباشد">
         </td>
         <td>
             <div class="form-check">
@@ -305,22 +315,53 @@
         // تنظیم ارتفاع همه فیلدهای توضیحات به یک خط
         $('.notes-field').css('height', 'auto').css('min-height', '38px');
         
+        // بازیابی انتخاب کالا از sessionStorage اگر وجود دارد
+        $('.product-select').each(function() {
+            var selectId = $(this).attr('id');
+            var savedValue = sessionStorage.getItem('selected_product_' + selectId);
+            
+            if (savedValue) {
+                $(this).val(savedValue);
+                // تریگر کردن رویداد change برای به‌روزرسانی سایر فیلدها
+                $(this).trigger('change');
+                // پاک کردن مقدار ذخیره شده پس از استفاده
+                sessionStorage.removeItem('selected_product_' + selectId);
+            }
+        });
+        
         // اعتبارسنجی تعداد رقم‌های مجاز
         function validateQuantityFields() {
             $('input[type="number"]').each(function() {
                 $(this).attr('oninvalid', "this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.')");
                 $(this).attr('oninput', "this.setCustomValidity('')");
+                $(this).attr('maxlength', "15");
                 
                 $(this).on('input', function() {
-                    // بررسی تعداد رقم‌های ورودی
-                    const value = this.value.replace(/[^0-9]/g, '');
+                    // بررسی تعداد رقم‌های ورودی - حذف اعشار و علامت منفی برای شمارش تعداد رقم
+                    const value = this.value.replace(/[^\d]/g, '');
+                    
                     if (value.length > 15) {
+                        // محدود کردن ورودی به 15 رقم با حفظ اعشار
+                        let cleaned = value.substring(0, 15);
+                        let dotIndex = this.value.indexOf('.');
+                        
+                        if (dotIndex >= 0 && dotIndex < 15) {
+                            // حفظ قسمت اعشار اگر نقطه اعشار در محدوده مجاز است
+                            this.value = this.value.substring(0, dotIndex) + 
+                                         this.value.substring(dotIndex, Math.min(dotIndex + 16, this.value.length));
+                        } else {
+                            this.value = cleaned;
+                        }
+                        
                         this.setCustomValidity('تعداد رقم‌ها نباید بیشتر از 15 باشد.');
                         this.reportValidity();
                     } else {
                         this.setCustomValidity('');
                     }
                 });
+                
+                // اضافه کردن کنترل مستقیم برای جلوگیری از ورود بیش از 15 رقم
+                $(this).attr('data-original-value', $(this).val());
             });
         }
         
@@ -499,24 +540,73 @@
         // اعتبارسنجی فرم قبل از ارسال
         $('#orderForm').submit(function(e) {
             let hasErrors = false;
+            let firstErrorField = null;
             
             // بررسی تمام فیلدهای مقدار
             $('input[type="number"]:visible').each(function() {
                 // بررسی تعداد رقم‌های ورودی
-                const value = this.value.replace(/[^0-9]/g, '');
+                const value = this.value.replace(/[^\d]/g, '');
+                
                 if (value.length > 15) {
                     this.setCustomValidity('تعداد رقم‌ها نباید بیشتر از 15 باشد.');
+                    $(this).addClass('is-invalid');
+                    
+                    // ذخیره اولین فیلد خطا برای اسکرول به آن
+                    if (!firstErrorField) {
+                        firstErrorField = this;
+                    }
+                    
+                    // برگرداندن مقدار به آخرین مقدار معتبر اگر در دسترس است
+                    var originalValue = $(this).attr('data-original-value');
+                    if (originalValue && originalValue.replace(/[^\d]/g, '').length <= 15) {
+                        this.value = originalValue;
+                    } else {
+                        // محدود کردن به 15 رقم
+                        let cleaned = value.substring(0, 15);
+                        let dotIndex = this.value.indexOf('.');
+                        
+                        if (dotIndex >= 0 && dotIndex < 15) {
+                            this.value = this.value.substring(0, dotIndex) + 
+                                        this.value.substring(dotIndex, Math.min(dotIndex + 16, this.value.length));
+                        } else {
+                            this.value = cleaned;
+                        }
+                    }
+                    
                     hasErrors = true;
                 } else {
                     this.setCustomValidity('');
+                    $(this).removeClass('is-invalid');
+                    // به‌روزرسانی مقدار معتبر
+                    $(this).attr('data-original-value', this.value);
                 }
             });
             
             if (hasErrors) {
                 e.preventDefault();
+                
+                // نمایش پیام خطا
                 alert('لطفاً خطاها را اصلاح کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.');
+                
+                // اسکرول به اولین فیلد خطا
+                if (firstErrorField) {
+                    $('html, body').animate({
+                        scrollTop: $(firstErrorField).offset().top - 100
+                    }, 500);
+                    $(firstErrorField).focus();
+                }
+                
                 return false;
             }
+            
+            // حفظ کالای انتخاب شده در صورت خطا
+            $('.product-select').each(function() {
+                var productId = $(this).val();
+                if (productId) {
+                    // ذخیره انتخاب کاربر در sessionStorage
+                    sessionStorage.setItem('selected_product_' + $(this).attr('id'), productId);
+                }
+            });
         });
     });
 </script>

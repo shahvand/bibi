@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap4',
     'django_filters',
+    'jalali_date',
     
     # Local apps
     'workflow.apps.WorkflowConfig',
@@ -179,3 +180,35 @@ MESSAGE_TAGS = {
 # Crispy Forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+# Jalali Date Settings
+JALALI_DATE_DEFAULTS = {
+   'LIST_DISPLAY_AUTO_CONVERT': True,
+   'Strftime': {
+        'date': '%Y/%m/%d',
+        'datetime': '%H:%M:%S _ %Y/%m/%d',
+    },
+    'Static': {
+        'js': [
+            'admin/js/django_jalali.min.js',
+        ],
+        'css': {
+            'all': [
+              'admin/css/django_jalali.min.css',
+            ]
+        }
+    },
+}
+
+# Set locale to Persian
+import locale
+import sys
+
+try:
+    if sys.platform.startswith('win32'):
+        locale.setlocale(locale.LC_ALL, "Persian_Iran.UTF-8")
+    else:
+        locale.setlocale(locale.LC_ALL, "fa_IR.UTF-8")
+except locale.Error:
+    # If locale is not available, gracefully continue
+    pass

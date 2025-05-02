@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import User, Product, Order, OrderItem, Driver, Unit
 from .templatetags.workflow_filters import format_price_input
+import decimal
 
 class UserRegisterForm(UserCreationForm):
     class Meta:
@@ -112,6 +113,19 @@ class WarehouseOrderItemForm(forms.ModelForm):
                 self.initial['approved_quantity'] = format_price_input(self.instance.approved_quantity)
             if self.instance.price_per_unit:
                 self.initial['price_per_unit'] = format_price_input(self.instance.price_per_unit)
+                
+    def clean_approved_quantity(self):
+        """Validate that approved_quantity doesn't exceed maximum allowed value"""
+        approved_quantity = self.cleaned_data.get('approved_quantity')
+        
+        if approved_quantity:
+            max_allowed = decimal.Decimal('999999999999999')  # 15 digits (max_digits=15)
+            if approved_quantity > max_allowed:
+                raise forms.ValidationError(
+                    'مقدار بیش از حد مجاز. حداکثر مقدار مجاز ۹۹۹,۹۹۹,۹۹۹,۹۹۹,۹۹۹ می‌باشد.'
+                )
+                
+        return approved_quantity
 
 class WarehouseOrderForm(forms.ModelForm):
     driver = forms.ModelChoiceField(
@@ -205,6 +219,32 @@ class OrderItemEditForm(forms.ModelForm):
                 # اگر تعداد تایید شده صفر باشد، آیتم را به عنوان رد شده علامت می‌زنیم
                 if self.instance.approved_quantity == 0:
                     self.initial['is_rejected'] = True
+    
+    def clean_requested_quantity(self):
+        """Validate that requested_quantity doesn't exceed maximum allowed value"""
+        requested_quantity = self.cleaned_data.get('requested_quantity')
+        
+        if requested_quantity:
+            max_allowed = decimal.Decimal('999999999999999')  # 15 digits (max_digits=15)
+            if requested_quantity > max_allowed:
+                raise forms.ValidationError(
+                    'مقدار بیش از حد مجاز. حداکثر مقدار مجاز ۹۹۹,۹۹۹,۹۹۹,۹۹۹,۹۹۹ می‌باشد.'
+                )
+                
+        return requested_quantity
+        
+    def clean_approved_quantity(self):
+        """Validate that approved_quantity doesn't exceed maximum allowed value"""
+        approved_quantity = self.cleaned_data.get('approved_quantity')
+        
+        if approved_quantity:
+            max_allowed = decimal.Decimal('999999999999999')  # 15 digits (max_digits=15)
+            if approved_quantity > max_allowed:
+                raise forms.ValidationError(
+                    'مقدار بیش از حد مجاز. حداکثر مقدار مجاز ۹۹۹,۹۹۹,۹۹۹,۹۹۹,۹۹۹ می‌باشد.'
+                )
+                
+        return approved_quantity
     
     def save(self, commit=True):
         """ذخیره تغییرات با در نظر گرفتن رد کردن آیتم و وضعیت سفارش"""

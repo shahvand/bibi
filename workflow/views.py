@@ -309,7 +309,7 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
         
         # For requester
         if self.request.user.role == 'REQUESTER' and self.request.user == self.object.requester:
-            # امکان تایید دریافت در وضعیت تحویل داده شده
+            # امکان تایید دریافت در وضعیت تحویل راننده شده
             if self.object.status == 'DELIVERED':
                 context['receipt_form'] = OrderReceiptForm(instance=self.object)
                 context['can_confirm_receipt'] = True
@@ -341,7 +341,27 @@ def approve_order(request, pk):
                     item_quantity = request.POST.get(f'item_{item.id}')
                     if item_quantity:
                         try:
-                            item.approved_quantity = decimal.Decimal(item_quantity)
+                            # Parse the input to Decimal
+                            quantity = decimal.Decimal(item_quantity)
+                            
+                            # Validate that the number isn't too large for the database field
+                            # Max digits is 15, so the number must be less than 10^15
+                            if quantity >= decimal.Decimal('1000000000000000'):  # 10^15
+                                messages.error(
+                                    request, 
+                                    f'مقدار بیش از حد مجاز برای {item.product.title}. حداکثر مقدار مجاز ۹۹۹,۹۹۹,۹۹۹,۹۹۹,۹۹۹ می‌باشد.'
+                                )
+                                return redirect('order-detail', pk=order.pk)
+                            
+                            # Validate that the number isn't negative
+                            if quantity < 0:
+                                messages.error(
+                                    request, 
+                                    f'مقدار نمی‌تواند منفی باشد برای {item.product.title}'
+                                )
+                                return redirect('order-detail', pk=order.pk)
+                            
+                            item.approved_quantity = quantity
                             item.save()
                         except decimal.InvalidOperation:
                             messages.error(request, f'مقدار نامعتبر برای {item.product.title}')
@@ -439,7 +459,7 @@ def edit_order_items(request, pk):
         return redirect('order-detail', pk=order.pk)
     
     if order.status == 'APPROVED' and order.driver is not None:
-        messages.error(request, 'این سفارش به راننده تحویل داده شده و دیگر قابل ویرایش نیست.')
+        messages.error(request, 'این سفارش به راننده تحویل شده و دیگر قابل ویرایش نیست.')
         return redirect('order-detail', pk=order.pk)
     
     # تنظیم فرم‌ست برای آیتم‌های سفارش - امکان اضافه و حذف آیتم فقط در حالت PENDING
@@ -663,9 +683,13 @@ def generate_invoice_pdf(request, pk):
         except:
             return value
     
+    # تبدیل تاریخ میلادی به شمسی
+    import jdatetime
+    jalali_date = jdatetime.datetime.fromgregorian(datetime=order.order_date).strftime('%Y/%m/%d')
+    
     lines = [
         f"INVOICE #{order.id}",
-        f"Date: {order.order_date.strftime('%Y-%m-%d')}",
+        f"Date: {jalali_date}",
         f"Requester: {order.requester.get_full_name() or order.requester.username}",
         f"Status: {order.get_status_display()}",
         f"Driver: {order.driver.name if order.driver else 'Not assigned'}",

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils import timezone
+import decimal
 
 class UserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
@@ -82,8 +83,11 @@ class Order(models.Model):
     STATUS_CHOICES = (
         ('PENDING', 'در انتظار تایید'),
         ('APPROVED', 'تایید شده'),
+        ('READY', 'آماده ارسال'),
+        ('SHIPPING', 'در حال ارسال'),
+        ('DELIVERED', 'تحویل راننده شده'),
         ('REJECTED', 'رد شده'),
-        ('DELIVERED', 'تحویل داده شده'),
+        ('CANCELLED', 'لغو شده'),
         ('RECEIVED', 'دریافت شده'),
     )
     
@@ -159,5 +163,11 @@ class OrderItem(models.Model):
         
         if not self.price_per_unit:
             self.price_per_unit = self.product.price_per_unit
+        
+        # Validate that approved_quantity doesn't exceed database limits
+        if self.approved_quantity:
+            max_allowed = decimal.Decimal('999999999999999')  # 15 digits (max_digits=15)
+            if self.approved_quantity > max_allowed:
+                self.approved_quantity = max_allowed
         
         super().save(*args, **kwargs)

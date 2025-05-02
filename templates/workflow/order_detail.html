@@ -44,7 +44,7 @@
                                     {% elif order.status == 'SHIPPING' %}
                                     <span class="badge bg-warning">در حال ارسال</span>
                                     {% elif order.status == 'DELIVERED' %}
-                                    <span class="badge bg-success">تحویل داده شده</span>
+                                    <span class="badge bg-success">تحویل راننده شده</span>
                                     {% elif order.status == 'REJECTED' %}
                                     <span class="badge bg-danger">رد شده</span>
                                     {% elif order.status == 'CANCELLED' %}
@@ -149,7 +149,7 @@
                     <tfoot class="table-light">
                         <tr>
                             <td colspan="7" class="text-start fw-bold">جمع کل:</td>
-                            <td class="fw-bold">{{ order.total_price|format_price }} تومان</td>
+                            <td class="fw-bold">{{ order.total_price|format_price }}</td>
                             <td></td>
                         </tr>
                     </tfoot>
@@ -183,8 +183,11 @@
                                             <td>{{ item.product.title }} ({{ item.product.code }})</td>
                                             <td>{{ item.requested_quantity|clean_number }} {% if item.product.unit_ref %}{{ item.product.unit_ref.symbol }}{% else %}{{ item.product.unit }}{% endif %}</td>
                                             <td>
-                                                <input type="number" step="any" min="0" name="item_{{ item.id }}" 
-                                                       class="form-control" value="{{ item.requested_quantity|clean_number }}">
+                                                <input type="number" step="any" min="0" max="999999999999999" name="item_{{ item.id }}" 
+                                                       class="form-control" value="{{ item.requested_quantity|clean_number }}"
+                                                       oninvalid="this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. حداکثر ۹۹۹,۹۹۹,۹۹۹,۹۹۹,۹۹۹ مجاز است.')"
+                                                       oninput="this.setCustomValidity('')"
+                                                       title="لطفاً یک عدد صحیح یا اعشاری وارد کنید که از ۹۹۹,۹۹۹,۹۹۹,۹۹۹,۹۹۹ بیشتر نباشد">
                                             </td>
                                             <td>{{ item.price_per_unit|format_price }}</td>
                                         </tr>
@@ -250,7 +253,7 @@
                         <form method="post" action="{% url 'order-confirm-receipt' order.id %}">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-success">
-                                <i class="fas fa-truck"></i> ثبت به عنوان تحویل شده
+                                <i class="fas fa-truck"></i> ثبت به عنوان دریافت شده
                             </button>
                         </form>
                     </div>
@@ -267,7 +270,7 @@
             <div class="text-center">
                 <h2>سفارش #{{ order.id }}</h2>
                 <div>وضعیت: {{ order.get_status_display }}</div>
-                <div>تاریخ چاپ: {% now "Y/m/d H:i" %}</div>
+                <div>تاریخ چاپ: {% now "Y/m/d H:i"|to_jalali %}</div>
             </div>
         </div>
         
@@ -355,7 +358,7 @@
                 <tfoot>
                     <tr>
                         <td colspan="6" class="text-start fw-bold">جمع کل:</td>
-                        <td class="fw-bold">{{ order.total_price|format_price }} تومان</td>
+                        <td class="fw-bold">{{ order.total_price|format_price }}</td>
                     </tr>
                 </tfoot>
             </table>

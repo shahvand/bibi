@@ -33,7 +33,7 @@
                         <option value="PENDING" {% if request.GET.status == 'PENDING' %}selected{% endif %}>در انتظار</option>
                         <option value="APPROVED" {% if request.GET.status == 'APPROVED' %}selected{% endif %}>تایید شده</option>
                         <option value="REJECTED" {% if request.GET.status == 'REJECTED' %}selected{% endif %}>رد شده</option>
-                        <option value="DELIVERED" {% if request.GET.status == 'DELIVERED' %}selected{% endif %}>تحویل داده شده</option>
+                        <option value="DELIVERED" {% if request.GET.status == 'DELIVERED' %}selected{% endif %}>تحویل راننده شده</option>
                         <option value="RECEIVED" {% if request.GET.status == 'RECEIVED' %}selected{% endif %}>دریافت شده</option>
                     </select>
                 </div>
@@ -101,7 +101,7 @@
                                 {% elif order.status == 'REJECTED' %}
                                 <span class="badge bg-danger">رد شده</span>
                                 {% elif order.status == 'DELIVERED' %}
-                                <span class="badge bg-info">تحویل داده شده</span>
+                                <span class="badge bg-info">تحویل راننده شده</span>
                                 {% elif order.status == 'RECEIVED' %}
                                 <span class="badge bg-primary">دریافت شده</span>
                                 {% endif %}

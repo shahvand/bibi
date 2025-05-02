@@ -54,3 +54,6 @@ npm-debug.log
 yarn-debug.log
 yarn-error.log
 /staticfiles/
+entrypoint.sh
+entrypoint.sh
+inventory_management/settings.py

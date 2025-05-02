@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set default values for environment variables if not set
-DB_HOST=${DATABASE_HOST:-db}
+DB_HOST=${DATABASE_HOST:-192.168.100.26}
 DB_PORT=${DATABASE_PORT:-3306}
 
 # Wait for MySQL to be ready

@@ -29,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-key-change-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = True
 
 # ALLOWED_HOSTS configuration - fixed version
 ALLOWED_HOSTS = ['*']
@@ -91,10 +91,10 @@ WSGI_APPLICATION = 'inventory_management.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': os.environ.get('DATABASE_ENGINE', 'django.db.backends.mysql'),
-        'NAME': os.environ.get('DATABASE_NAME', 'bibi_db'),
-        'USER': os.environ.get('DATABASE_USER', 'bibi_user'),
-        'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'bibi_password'),
-        'HOST': os.environ.get('DATABASE_HOST', 'db'),
+        'NAME': os.environ['DATABASE_NAME'],
+        'USER': os.environ['DATABASE_USER'],
+        'PASSWORD': os.environ['DATABASE_PASSWORD'],
+        'HOST': os.environ['DATABASE_HOST'],
         'PORT': os.environ.get('DATABASE_PORT', '3306'),
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
@@ -143,13 +143,12 @@ LOCALE_PATHS = [
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.environ.get('STATIC_ROOT', os.path.join(BASE_DIR, 'staticfiles'))
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# ایجاد فهرست STATICFILES_DIRS تنها اگر دایرکتوری static در پروژه وجود داشته باشد
-if os.path.exists(os.path.join(BASE_DIR, 'static')):
-    STATICFILES_DIRS = [
-        os.path.join(BASE_DIR, 'static'),
-    ]
+# تغییر تنظیمات STATICFILES_DIRS برای اطمینان از پیدا شدن فایل‌های استاتیک
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
 # Media files
 MEDIA_URL = '/media/'

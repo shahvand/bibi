@@ -148,6 +148,14 @@
                     </div>
                 {% endif %}
                 
+                <!-- Active Session Warning -->
+                {% if user.is_authenticated and active_sessions > 1 %}
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <strong>هشدار!</strong> شما در {{ active_sessions }} نشست فعال هستید. این کار ممکن است باعث از دست دادن داده‌ها شود.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endif %}
+                
                 <!-- Content Block -->
                 {% block content %}{% endblock %}
             </main>

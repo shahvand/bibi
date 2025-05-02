@@ -1,12 +1,13 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
+from .custom_login_view import SessionControlLoginView
 
 urlpatterns = [
     # Dashboard and authentication
     path('', views.dashboard, name='dashboard'),
     path('register/', views.register, name='register'),
-    path('login/', auth_views.LoginView.as_view(template_name='workflow/login.html'), name='login'),
+    path('login/', SessionControlLoginView.as_view(template_name='workflow/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='workflow/logout.html'), name='logout'),
     
     # Products

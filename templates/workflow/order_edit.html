@@ -122,14 +122,25 @@
                                     
                                     {% if order.status == 'PENDING' %}
                                     <td>
-                                        {{ form.requested_quantity }}
+                                        <input type="number" name="{{ form.requested_quantity.html_name }}" 
+                                               id="{{ form.requested_quantity.auto_id }}" 
+                                               class="form-control" min="0.01" step="any" 
+                                               value="{{ form.requested_quantity.value|default:1 }}"
+                                               oninvalid="this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.')"
+                                               oninput="this.setCustomValidity('')">
                                         {{ form.requested_quantity.errors }}
                                         {{ form.approved_quantity }}
                                     </td>
                                     {% else %}
                                     <td>{{ form.instance.requested_quantity|clean_number }}</td>
                                     <td>
-                                        {{ form.approved_quantity }}
+                                        <input type="number" name="{{ form.approved_quantity.html_name }}" 
+                                               id="{{ form.approved_quantity.auto_id }}" 
+                                               class="form-control" min="0" step="any" 
+                                               value="{{ form.approved_quantity.value|default:0 }}" 
+                                               {% if form.instance.is_rejected %}disabled{% endif %}
+                                               oninvalid="this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.')"
+                                               oninput="this.setCustomValidity('')">
                                         {{ form.approved_quantity.errors }}
                                     </td>
                                     <td>
@@ -178,7 +189,10 @@
                                     <td>
                                         <input type="number" name="{{ form.requested_quantity.html_name }}" 
                                                id="{{ form.requested_quantity.auto_id }}" 
-                                               class="form-control" min="1" step="1" value="1">
+                                               class="form-control" min="0.01" step="any" 
+                                               value="{{ form.requested_quantity.value|default:1 }}"
+                                               oninvalid="this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.')"
+                                               oninput="this.setCustomValidity('')">
                                         {{ form.requested_quantity.errors }}
                                         <input type="hidden" name="{{ form.approved_quantity.html_name }}" 
                                                id="{{ form.approved_quantity.auto_id }}" value="1">
@@ -237,7 +251,9 @@
         <td>
             <input type="number" name="__PREFIX__-requested_quantity" 
                    id="id___PREFIX__-requested_quantity" 
-                   class="form-control" min="1" step="1" value="1">
+                   class="form-control" min="0.01" step="any" value="1"
+                   oninvalid="this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.')"
+                   oninput="this.setCustomValidity('')">
             <input type="hidden" name="__PREFIX__-approved_quantity" 
                    id="id___PREFIX__-approved_quantity" value="1">
         </td>
@@ -246,7 +262,9 @@
         <td>
             <input type="number" name="__PREFIX__-approved_quantity" 
                    id="id___PREFIX__-approved_quantity" 
-                   class="form-control" min="0" step="1" value="1">
+                   class="form-control" min="0" step="any" value="1"
+                   oninvalid="this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.')"
+                   oninput="this.setCustomValidity('')">
         </td>
         <td>
             <div class="form-check">
@@ -286,6 +304,28 @@
     $(document).ready(function() {
         // تنظیم ارتفاع همه فیلدهای توضیحات به یک خط
         $('.notes-field').css('height', 'auto').css('min-height', '38px');
+        
+        // اعتبارسنجی تعداد رقم‌های مجاز
+        function validateQuantityFields() {
+            $('input[type="number"]').each(function() {
+                $(this).attr('oninvalid', "this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.')");
+                $(this).attr('oninput', "this.setCustomValidity('')");
+                
+                $(this).on('input', function() {
+                    // بررسی تعداد رقم‌های ورودی
+                    const value = this.value.replace(/[^0-9]/g, '');
+                    if (value.length > 15) {
+                        this.setCustomValidity('تعداد رقم‌ها نباید بیشتر از 15 باشد.');
+                        this.reportValidity();
+                    } else {
+                        this.setCustomValidity('');
+                    }
+                });
+            });
+        }
+        
+        // اجرای اعتبارسنجی برای فیلدهای موجود
+        validateQuantityFields();
         
         // بررسی وضعیت رد شدن آیتم‌ها و غیرفعال کردن فیلد مقدار تایید شده
         $('.form-check-input').change(function() {
@@ -435,6 +475,9 @@
             emptyRow.find('textarea').val('');
             emptyRow.find('select').val('');
             
+            // اعمال اعتبارسنجی برای فیلدهای جدید
+            validateQuantityFields();
+            
             // بروزرسانی شماره ردیف‌ها
             updateRowNumbers();
             
@@ -452,6 +495,29 @@
         
         // بروزرسانی شماره ردیف‌ها در ابتدای بارگذاری
         updateRowNumbers();
+        
+        // اعتبارسنجی فرم قبل از ارسال
+        $('#orderForm').submit(function(e) {
+            let hasErrors = false;
+            
+            // بررسی تمام فیلدهای مقدار
+            $('input[type="number"]:visible').each(function() {
+                // بررسی تعداد رقم‌های ورودی
+                const value = this.value.replace(/[^0-9]/g, '');
+                if (value.length > 15) {
+                    this.setCustomValidity('تعداد رقم‌ها نباید بیشتر از 15 باشد.');
+                    hasErrors = true;
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+            
+            if (hasErrors) {
+                e.preventDefault();
+                alert('لطفاً خطاها را اصلاح کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.');
+                return false;
+            }
+        });
     });
 </script>
 {% endblock %} 

@@ -9,7 +9,7 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">داشبورد</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'product-list' %}">محصولات</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'product-list' %}">کالاها</a></li>
             <li class="breadcrumb-item active" aria-current="page">{{ product.title }}</li>
         </ol>
     </nav>
@@ -21,15 +21,15 @@
         <div class="card-body">
             <div class="row mb-4">
                 <div class="col-md-6">
-                    <h6>مشخصات محصول</h6>
+                    <h6>مشخصات کالا</h6>
                     <table class="table table-sm">
                         <tbody>
                             <tr>
-                                <th>کد محصول:</th>
+                                <th>کد کالا:</th>
                                 <td>{{ product.code }}</td>
                             </tr>
                             <tr>
-                                <th>نام محصول:</th>
+                                <th>نام کالا:</th>
                                 <td>{{ product.title }}</td>
                             </tr>
                             <tr>
@@ -80,7 +80,7 @@
                         </table>
                     {% else %}
                         <div class="alert alert-info">
-                            هنوز تراکنشی برای این محصول ثبت نشده است.
+                            هنوز تراکنشی برای این کالا ثبت نشده است.
                         </div>
                     {% endif %}
                 </div>
@@ -89,11 +89,11 @@
         <div class="card-footer">
             <a href="{% url 'product-list' %}" class="btn btn-outline-secondary">
                 <i class="fa fa-arrow-right ml-1"></i>
-                بازگشت به لیست محصولات
+                بازگشت به لیست کالاها
             </a>
             <a href="{% url 'product-update' product.pk %}" class="btn btn-outline-primary">
                 <i class="fa fa-edit ml-1"></i>
-                ویرایش محصول
+                ویرایش کالا
             </a>
         </div>
     </div>

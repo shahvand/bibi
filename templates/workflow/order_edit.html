@@ -61,7 +61,7 @@
                                     {% if order.status == 'PENDING' %}
                                     شما می‌توانید اقلام سفارش را تغییر دهید، آیتم‌ها را حذف کنید یا آیتم‌های جدید اضافه کنید.
                                     {% else %}
-                                    شما می‌توانید مقادیر تایید شده محصولات را تغییر دهید یا هر آیتم را با علامت‌گذاری گزینه "رد شده" رد کنید.
+                                    شما می‌توانید مقادیر تایید شده کالاها را تغییر دهید یا هر آیتم را با علامت‌گذاری گزینه "رد شده" رد کنید.
                                     {% endif %}
                                     لطفاً توضیحات خود را در بخش یادداشت‌ها وارد کنید.
                                 </div>
@@ -86,7 +86,7 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>محصول</th>
+                                <th>کالا</th>
                                 <th>کد</th>
                                 {% if order.status == 'PENDING' %}
                                 <th>مقدار</th>
@@ -167,7 +167,7 @@
                                     <td>{{ forloop.counter }}</td>
                                     <td>
                                         <select name="{{ form.product.html_name }}" id="{{ form.product.auto_id }}" class="form-control product-select">
-                                            <option value="">-- انتخاب محصول --</option>
+                                            <option value="">-- انتخاب کالا --</option>
                                             {% for product in products %}
                                             <option value="{{ product.id }}">{{ product.title }} ({{ product.code }})</option>
                                             {% endfor %}
@@ -225,7 +225,7 @@
         <td class="row-number">0</td>
         <td>
             <select name="__PREFIX__-product" id="id___PREFIX__-product" class="form-control product-select">
-                <option value="">-- انتخاب محصول --</option>
+                <option value="">-- انتخاب کالا --</option>
                 {% for product in products %}
                 <option value="{{ product.id }}">{{ product.title }} ({{ product.code }})</option>
                 {% endfor %}
@@ -312,9 +312,9 @@
             });
         }
 
-        // تابع برای بارگذاری اطلاعات محصول انتخاب شده
+        // تابع برای بارگذاری اطلاعات کالای انتخاب شده
         function setupProductSelect(productSelect) {
-            // تعریف متغیرهای محصولات به صورت آبجکت جاوااسکریپت
+            // تعریف متغیرهای کالاها به صورت آبجکت جاوااسکریپت
             var productsData = {
                 {% for p in products %}
                 "{{ p.id }}": {
@@ -338,14 +338,9 @@
                         row.find('.product-code').text(productData.code);
                         row.find('.product-unit').text(productData.unit);
                         row.find('.product-price').text(productData.price);
-                    } else {
-                        var productName = selectedOption.text();
-                        var codeMatch = productName.match(/\(([^)]+)\)/);
-                        var code = codeMatch ? codeMatch[1] : '-';
                         
-                        row.find('.product-code').text(code);
-                        row.find('.product-unit').text('عدد');
-                        row.find('.product-price').text('-');
+                        // بروزرسانی برچسب واحد در کنار فیلدهای مقدار
+                        row.find('.unit-label').text(productData.unit);
                     }
                 } else {
                     row.find('.product-code').text('-');

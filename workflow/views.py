@@ -109,7 +109,7 @@ class ProductDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return self.request.user.role in ['ADMIN', 'WAREHOUSE']
     
     def delete(self, request, *args, **kwargs):
-        messages.success(request, 'محصول با موفقیت حذف شد.')
+        messages.success(request, 'کالا با موفقیت حذف شد.')
         return super().delete(request, *args, **kwargs)
 
 # Driver views
@@ -758,24 +758,26 @@ class UnitDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 @login_required
 def get_product_info(request):
-    """API برای دریافت اطلاعات محصول"""
-    product_id = request.GET.get('product_id')
+    """API برای دریافت اطلاعات کالا"""
+    product_id = request.GET.get('id')
     if not product_id:
-        return JsonResponse({'success': False, 'error': 'شناسه محصول ارسال نشده است'})
+        return JsonResponse({'success': False, 'error': 'شناسه کالا ارسال نشده است'})
     
     try:
-        product = Product.objects.get(pk=product_id)
+        product_id = int(product_id)
         
-        # تهیه اطلاعات محصول
-        unit = product.unit_ref.symbol if product.unit_ref else product.unit
-        price_formatted = format_price(product.price_per_unit)
+        # تهیه اطلاعات کالا
+        product = Product.objects.get(pk=product_id)
         
         return JsonResponse({
             'success': True,
+            'id': product.id,
+            'title': product.title,
             'code': product.code,
-            'unit': unit,
-            'price': float(product.price_per_unit),
-            'price_formatted': price_formatted
+            'unit': product.unit_ref.symbol if product.unit_ref else product.unit,
+            'price': format_price(product.price_per_unit)
         })
     except Product.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'محصول یافت نشد'})
+        return JsonResponse({'success': False, 'error': 'کالا یافت نشد'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})

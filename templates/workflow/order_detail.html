@@ -116,7 +116,7 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>محصول</th>
+                            <th>کالا</th>
                             <th>کد</th>
                             <th>مقدار درخواستی</th>
                             <th>مقدار تایید شده</th>
@@ -171,7 +171,7 @@
                                 <table class="table table-bordered">
                                     <thead>
                                         <tr>
-                                            <th>محصول</th>
+                                            <th>کالا</th>
                                             <th>مقدار درخواستی</th>
                                             <th>مقدار تایید شده</th>
                                             <th>قیمت واحد (تومان)</th>
@@ -332,12 +332,12 @@
                 <thead>
                     <tr>
                         <th width="5%">#</th>
-                        <th width="25%">محصول</th>
-                        <th width="10%">کد</th>
-                        <th width="10%">مقدار</th>
+                        <th width="25%">کالا</th>
+                        <th width="15%">کد</th>
+                        <th width="15%">مقدار درخواستی</th>
+                        <th width="15%">مقدار تایید شده</th>
                         <th width="10%">واحد</th>
-                        <th width="20%">قیمت واحد (تومان)</th>
-                        <th width="20%">قیمت کل (تومان)</th>
+                        <th width="15%">قیمت واحد (تومان)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -349,7 +349,6 @@
                         <td>{% if item.approved_quantity %}{{ item.approved_quantity|clean_number }}{% else %}{{ item.requested_quantity|clean_number }}{% endif %}</td>
                         <td>{% if item.product.unit_ref %}{{ item.product.unit_ref.symbol }}{% else %}{{ item.product.unit }}{% endif %}</td>
                         <td>{{ item.price_per_unit|format_price }}</td>
-                        <td>{{ item.total_price|format_price }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

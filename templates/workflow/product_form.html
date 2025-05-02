@@ -1,7 +1,7 @@
 {% extends 'workflow/base.html' %}
 {% load static %}
 
-{% block title %}ویرایش محصول - سیستم مدیریت انبار{% endblock %}
+{% block title %}ویرایش کالا - سیستم مدیریت انبار{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -9,14 +9,14 @@
         <div class="col-lg-8">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">{% if form.instance.id %}ویرایش محصول{% else %}افزودن محصول جدید{% endif %}</h4>
+                    <h4 class="mb-0">{% if form.instance.id %}ویرایش کالا{% else %}افزودن کالای جدید{% endif %}</h4>
                 </div>
                 <div class="card-body">
                     <form method="post" id="productForm" action="" novalidate>
                         {% csrf_token %}
                         
                         <div class="mb-3">
-                            <label for="{{ form.title.id_for_label }}" class="form-label">عنوان محصول</label>
+                            <label for="{{ form.title.id_for_label }}" class="form-label">عنوان کالا</label>
                             {{ form.title }}
                             {% if form.title.errors %}
                             <div class="text-danger">

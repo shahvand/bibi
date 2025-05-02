@@ -58,8 +58,8 @@ class Product(models.Model):
     unit_ref = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="واحد")
     
     class Meta:
-        verbose_name = "محصول"
-        verbose_name_plural = "محصولات"
+        verbose_name = "کالا"
+        verbose_name_plural = "کالاها"
         ordering = ['title']
     
     def __str__(self):

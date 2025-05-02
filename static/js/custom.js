@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const currentValue = $(this).val();
                 
                 $(this).select2({
-                    placeholder: 'انتخاب محصول...',
+                    placeholder: 'انتخاب کالا...',
                     allowClear: true,
                     width: '100%',
                     language: {
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         var searchData = data.element.getAttribute('data-search') || '';
                         searchData = searchData.toLowerCase();
                         
-                        // اگر متن جستجو شده در عنوان یا کد محصول یافت شود، آن را نمایش بده
+                        // اگر متن جستجو شده در عنوان یا کد کالا یافت شود، آن را نمایش بده
                         if (data.text.toLowerCase().indexOf(term) > -1 || 
                             searchData.indexOf(term) > -1) {
                             return data;
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     $(this).val(currentValue).trigger('change');
                 }
                 
-                // بروزرسانی برچسب واحد بعد از انتخاب محصول
+                // بروزرسانی برچسب واحد بعد از انتخاب کالا
                 const unitLabel = $(this).closest('.item-form').find('.unit-label');
                 if (currentValue && unitLabel.length) {
                     const selectedOption = $(this).find('option[value="' + currentValue + '"]');

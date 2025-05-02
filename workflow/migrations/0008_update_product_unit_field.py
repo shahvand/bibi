@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterModelOptions(
             name='product',
-            options={'ordering': ['title'], 'verbose_name': 'محصول', 'verbose_name_plural': 'محصولات'},
+            options={'ordering': ['title'], 'verbose_name': 'کالا', 'verbose_name_plural': 'کالاها'},
         ),
         migrations.RemoveField(
             model_name='driver',

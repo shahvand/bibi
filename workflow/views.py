@@ -73,10 +73,10 @@ class ProductCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     success_url = reverse_lazy('product-list')
     
     def test_func(self):
-        return self.request.user.role in ['ADMIN', 'WAREHOUSE']
+        return self.request.user.role in ['ADMIN', 'ACCOUNTANT']
     
     def form_valid(self, form):
-        messages.success(self.request, f'Product created successfully!')
+        messages.success(self.request, f'کالا با موفقیت ایجاد شد!')
         return super().form_valid(form)
 
 class ProductUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -86,10 +86,10 @@ class ProductUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     success_url = reverse_lazy('product-list')
     
     def test_func(self):
-        return self.request.user.role in ['ADMIN', 'WAREHOUSE']
+        return self.request.user.role in ['ADMIN', 'ACCOUNTANT']
     
     def form_valid(self, form):
-        messages.success(self.request, f'Product updated successfully!')
+        messages.success(self.request, f'کالا با موفقیت به‌روزرسانی شد!')
         return super().form_valid(form)
 
 class ProductDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
@@ -106,7 +106,7 @@ class ProductDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     success_url = reverse_lazy('product-list')
     
     def test_func(self):
-        return self.request.user.role in ['ADMIN', 'WAREHOUSE']
+        return self.request.user.role in ['ADMIN', 'ACCOUNTANT']
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'کالا با موفقیت حذف شد.')
@@ -740,7 +740,15 @@ class UnitListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return queryset
     
     def test_func(self):
-        return self.request.user.role in ['ADMIN', 'WAREHOUSE']
+        return self.request.user.role in ['ADMIN', 'WAREHOUSE', 'ACCOUNTANT']
+        
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # فقط به حسابدار و ادمین اجازه افزودن واحد جدید داده می‌شود
+        context['can_add_unit'] = self.request.user.role in ['ADMIN', 'ACCOUNTANT']
+        # فقط به حسابدار و ادمین اجازه ویرایش و حذف واحدها داده می‌شود
+        context['can_edit_unit'] = self.request.user.role in ['ADMIN', 'ACCOUNTANT']
+        return context
 
 class UnitCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Unit
@@ -749,7 +757,7 @@ class UnitCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     success_url = reverse_lazy('unit-list')
     
     def test_func(self):
-        return self.request.user.role in ['ADMIN', 'WAREHOUSE']
+        return self.request.user.role in ['ADMIN', 'ACCOUNTANT']
     
     def form_valid(self, form):
         messages.success(self.request, 'واحد با موفقیت ایجاد شد!')
@@ -762,7 +770,7 @@ class UnitUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     success_url = reverse_lazy('unit-list')
     
     def test_func(self):
-        return self.request.user.role in ['ADMIN', 'WAREHOUSE']
+        return self.request.user.role in ['ADMIN', 'ACCOUNTANT']
     
     def form_valid(self, form):
         messages.success(self.request, 'واحد با موفقیت به‌روزرسانی شد!')
@@ -774,7 +782,7 @@ class UnitDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     success_url = reverse_lazy('unit-list')
     
     def test_func(self):
-        return self.request.user.role in ['ADMIN', 'WAREHOUSE']
+        return self.request.user.role in ['ADMIN', 'ACCOUNTANT']
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'واحد با موفقیت حذف شد.')
@@ -805,3 +813,52 @@ def get_product_info(request):
         return JsonResponse({'success': False, 'error': 'کالا یافت نشد'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+# ACCOUNTANT only views
+@login_required
+@role_required(['ACCOUNTANT', 'ADMIN'])
+def edit_order_prices(request, pk):
+    """ویرایش قیمت‌های محصولات در سفارش توسط حسابدار"""
+    order = get_object_or_404(Order, pk=pk)
+    
+    # تنظیم فرم برای آیتم‌های سفارش با تمرکز بر فیلد قیمت
+    class AccountantOrderItemForm(forms.ModelForm):
+        class Meta:
+            model = OrderItem
+            fields = ['price_per_unit', 'notes']
+            widgets = {
+                'price_per_unit': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+                'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            }
+        
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            if self.instance and self.instance.pk and self.instance.price_per_unit:
+                self.initial['price_per_unit'] = format_price_input(self.instance.price_per_unit)
+    
+    OrderItemFormSet = inlineformset_factory(
+        Order, OrderItem, 
+        form=AccountantOrderItemForm,
+        extra=0,
+        can_delete=False
+    )
+    
+    if request.method == 'POST':
+        formset = OrderItemFormSet(request.POST, instance=order)
+        
+        if formset.is_valid():
+            with transaction.atomic():
+                formset.save()
+                order.last_edit_time = timezone.now()
+                order.save()
+                messages.success(request, 'قیمت‌های سفارش با موفقیت به‌روزرسانی شدند.')
+                return redirect('order-detail', pk=order.pk)
+        else:
+            messages.error(request, 'لطفاً خطاهای فرم را برطرف کنید.')
+    else:
+        formset = OrderItemFormSet(instance=order)
+    
+    return render(request, 'workflow/order_edit_prices.html', {
+        'order': order,
+        'formset': formset,
+    })

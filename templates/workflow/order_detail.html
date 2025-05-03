@@ -242,6 +242,21 @@
                 </div>
             {% endif %}
             
+            <!-- Accountant - Edit Prices -->
+            {% if user.role == 'ACCOUNTANT' or user.role == 'ADMIN' %}
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5>ویرایش قیمت‌ها</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>به عنوان حسابدار، شما می‌توانید قیمت‌های کالاهای این سفارش را ویرایش کنید.</p>
+                        <a href="{% url 'order-edit-prices' order.id %}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> ویرایش قیمت‌ها
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+            
             <!-- Requester - Confirm Receipt -->
             {% if user.id == order.requester.id and order.status == 'DELIVERED' %}
                 <div class="card mt-4">

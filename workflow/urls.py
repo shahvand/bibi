@@ -6,7 +6,6 @@ from .custom_login_view import SessionControlLoginView
 urlpatterns = [
     # Dashboard and authentication
     path('', views.dashboard, name='dashboard'),
-    path('register/', views.register, name='register'),
     path('login/', SessionControlLoginView.as_view(template_name='workflow/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='workflow/logout.html'), name='logout'),
     
@@ -38,6 +37,7 @@ urlpatterns = [
     path('orders/<int:pk>/deliver/', views.mark_delivered, name='order-deliver'),
     path('orders/<int:pk>/confirm-receipt/', views.confirm_receipt, name='order-confirm-receipt'),
     path('orders/<int:pk>/edit/', views.edit_order_items, name='order-edit'),
+    path('orders/<int:pk>/edit-prices/', views.edit_order_prices, name='order-edit-prices'),
     path('orders/<int:pk>/invoice/', views.generate_invoice_pdf, name='generate-invoice'),
     
     # Reports

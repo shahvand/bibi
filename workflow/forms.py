@@ -95,12 +95,11 @@ class OrderItemFormSet(forms.BaseModelFormSet):
 class WarehouseOrderItemForm(forms.ModelForm):
     class Meta:
         model = OrderItem
-        fields = ['product', 'requested_quantity', 'approved_quantity', 'price_per_unit', 'notes']
+        fields = ['product', 'requested_quantity', 'approved_quantity', 'notes']
         widgets = {
             'product': forms.Select(attrs={'class': 'form-control', 'disabled': True}),
             'requested_quantity': forms.NumberInput(attrs={'class': 'form-control', 'readonly': True, 'step': 'any'}),
             'approved_quantity': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
-            'price_per_unit': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
     
@@ -111,8 +110,6 @@ class WarehouseOrderItemForm(forms.ModelForm):
             self.initial['requested_quantity'] = format_price_input(self.instance.requested_quantity)
             if self.instance.approved_quantity:
                 self.initial['approved_quantity'] = format_price_input(self.instance.approved_quantity)
-            if self.instance.price_per_unit:
-                self.initial['price_per_unit'] = format_price_input(self.instance.price_per_unit)
                 
     def clean_approved_quantity(self):
         """Validate that approved_quantity doesn't exceed maximum allowed value"""

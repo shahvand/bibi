@@ -36,6 +36,31 @@ class User(AbstractUser):
     
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
+        
+    def save(self, *args, **kwargs):
+        # ذخیره کاربر
+        super().save(*args, **kwargs)
+        
+        # اگر کاربر حسابدار است، به او دسترسی‌های لازم را اضافه کن
+        if self.role == 'ACCOUNTANT' and not self.is_superuser:
+            from django.contrib.auth.models import Permission
+            from django.contrib.contenttypes.models import ContentType
+            
+            # دسترسی به مدل Product
+            product_content_type = ContentType.objects.get_for_model(Product)
+            product_permissions = Permission.objects.filter(content_type=product_content_type)
+            
+            # اضافه کردن همه دسترسی‌های محصول به حسابدار
+            for perm in product_permissions:
+                self.user_permissions.add(perm)
+                
+            # دسترسی به مدل Unit
+            unit_content_type = ContentType.objects.get_for_model(Unit)
+            unit_permissions = Permission.objects.filter(content_type=unit_content_type)
+            
+            # اضافه کردن همه دسترسی‌های واحد به حسابدار
+            for perm in unit_permissions:
+                self.user_permissions.add(perm)
 
 class Unit(models.Model):
     name = models.CharField(max_length=50, unique=True, verbose_name="نام واحد")

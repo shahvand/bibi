@@ -1,0 +1,98 @@
+{% extends 'workflow/base.html' %}
+{% load workflow_filters %}
+
+{% block title %}ویرایش قیمت‌های سفارش - سیستم مدیریت انبار{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">ویرایش قیمت‌های سفارش #{{ order.id }}</h4>
+            <a href="{% url 'order-detail' order.id %}" class="btn btn-light">
+                <i class="fas fa-arrow-left"></i> بازگشت به سفارش
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> به عنوان حسابدار، شما می‌توانید قیمت کالاهای این سفارش را ویرایش کنید.
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <h5>اطلاعات سفارش</h5>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th width="40%">درخواست کننده:</th>
+                            <td>{{ order.requester.get_full_name|default:order.requester.username }}</td>
+                        </tr>
+                        <tr>
+                            <th>وضعیت:</th>
+                            <td>{{ order.get_status_display }}</td>
+                        </tr>
+                        <tr>
+                            <th>تاریخ سفارش:</th>
+                            <td>{{ order.order_date|date:"Y/m/d H:i" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <form method="post" class="form">
+                {% csrf_token %}
+                {{ formset.management_form }}
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>کالا</th>
+                                <th>کد کالا</th>
+                                <th>مقدار</th>
+                                <th>واحد</th>
+                                <th>قیمت واحد (تومان)</th>
+                                <th>توضیحات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for form in formset %}
+                                {{ form.id }}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ form.instance.product.title }}</td>
+                                    <td>{{ form.instance.product.code }}</td>
+                                    <td>
+                                        {% if form.instance.approved_quantity %}
+                                            {{ form.instance.approved_quantity|clean_number }}
+                                        {% else %}
+                                            {{ form.instance.requested_quantity|clean_number }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{% if form.instance.product.unit_ref %}{{ form.instance.product.unit_ref.symbol }}{% else %}{{ form.instance.product.unit }}{% endif %}</td>
+                                    <td>
+                                        {{ form.price_per_unit }}
+                                        {{ form.price_per_unit.errors }}
+                                    </td>
+                                    <td>
+                                        {{ form.notes }}
+                                        {{ form.notes.errors }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> ذخیره قیمت‌ها
+                    </button>
+                    <a href="{% url 'order-detail' order.id %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> انصراف
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

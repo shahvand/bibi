@@ -23,3 +23,15 @@ def session_info(request):
         context['active_sessions'] = active_count
     
     return context 
+
+def financial_access(request):
+    """
+    Adds a variable to the context indicating whether the current user
+    has access to financial information.
+    """
+    if not request.user.is_authenticated:
+        return {'can_view_financials': False}
+    
+    return {
+        'can_view_financials': request.user.role in ['ACCOUNTANT', 'ADMIN']
+    } 

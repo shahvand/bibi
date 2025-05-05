@@ -39,7 +39,9 @@
                             <th>عنوان کالا</th>
                             <th>کد</th>
                             <th>واحد</th>
+                            {% if can_view_financials %}
                             <th>قیمت واحد</th>
+                            {% endif %}
                             <th>عملیات</th>
                         </tr>
                     </thead>
@@ -50,7 +52,9 @@
                             <td>{{ product.title }}</td>
                             <td>{{ product.code }}</td>
                             <td>{{ product.unit }}</td>
+                            {% if can_view_financials %}
                             <td>{{ product.price_per_unit|format_price }}</td>
+                            {% endif %}
                             <td>
                                 <div class="btn-group" role="group">
                                     <a href="{% url 'product-detail' product.id %}" class="btn btn-sm btn-info" title="مشاهده جزئیات">

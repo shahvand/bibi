@@ -66,11 +66,13 @@
                             <th scope="col">#</th>
                             <th scope="col">شماره سفارش</th>
                             <th scope="col">درخواست کننده</th>
-                            <th scope="col">شعبه</th>
-                            <th scope="col">تاریخ سفارش</th>
+                            <th scope="col">تاریخ ثبت</th>
+                            <th scope="col">تاریخ تحویل</th>
                             <th scope="col">تعداد اقلام</th>
                             <th scope="col">وضعیت</th>
+                            {% if can_view_financials %}
                             <th scope="col">مبلغ کل</th>
+                            {% endif %}
                             <th scope="col">عملیات</th>
                         </tr>
                     </thead>
@@ -80,47 +82,48 @@
                             <td>{{ forloop.counter }}</td>
                             <td>{{ order.id }}</td>
                             <td>{{ order.requester.get_full_name|default:order.requester.username }}</td>
-                            <td>{{ order.requester.branch_name|default:"-" }}</td>
-                            <td>{{ order.order_date|to_jalali }}</td>
+                            <td>{{ order.order_date|to_jalali|default:"-" }}</td>
+                            <td>{{ order.delivered_at|to_jalali|default:"-" }}</td>
                             <td>{{ order.items.count }}</td>
                             <td>
                                 {% if order.status == 'PENDING' %}
-                                <span class="badge bg-secondary">در انتظار تایید</span>
+                                <span class="badge bg-secondary">در انتظار بررسی</span>
                                 {% elif order.status == 'APPROVED' %}
-                                <span class="badge bg-info">تایید شده</span>
-                                {% elif order.status == 'READY' %}
-                                <span class="badge bg-primary">آماده ارسال</span>
+                                <span class="badge bg-primary">تایید شده</span>
                                 {% elif order.status == 'SHIPPING' %}
                                 <span class="badge bg-warning">در حال ارسال</span>
                                 {% elif order.status == 'DELIVERED' %}
-                                <span class="badge bg-success">تحویل راننده شده</span>
+                                <span class="badge bg-info">تحویل راننده شده</span>
+                                {% elif order.status == 'RECEIVED' %}
+                                <span class="badge bg-success">تحویل گرفته شده</span>
                                 {% elif order.status == 'REJECTED' %}
                                 <span class="badge bg-danger">رد شده</span>
-                                {% elif order.status == 'CANCELLED' %}
-                                <span class="badge bg-danger">لغو شده</span>
-                                {% elif order.status == 'RECEIVED' %}
-                                <span class="badge bg-success">دریافت شده</span>
                                 {% endif %}
                             </td>
+                            {% if can_view_financials %}
                             <td>{{ order.total_price|format_price }}</td>
+                            {% endif %}
                             <td>
                                 <div class="btn-group" role="group">
                                     <a href="{% url 'order-detail' order.id %}" class="btn btn-sm btn-info" title="مشاهده جزئیات">
                                         <i class="fas fa-eye"></i>
                                     </a>
+                                    {% if can_view_financials %}
                                     <a href="{% url 'generate-invoice' order.id %}" class="btn btn-sm btn-primary" title="چاپ فاکتور">
                                         <i class="fas fa-file-invoice"></i>
                                     </a>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="9" class="text-center">سفارشی یافت نشد.</td>
+                            <td colspan="{% if can_view_financials %}9{% else %}8{% endif %}" class="text-center">هیچ سفارشی یافت نشد.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                     {% if orders %}
+                    {% if can_view_financials %}
                     <tfoot class="bg-light">
                         <tr>
                             <td colspan="7" class="text-left font-weight-bold">مجموع</td>
@@ -128,6 +131,7 @@
                             <td></td>
                         </tr>
                     </tfoot>
+                    {% endif %}
                     {% endif %}
                 </table>
             </div>
@@ -156,10 +160,12 @@
                                 <strong>تعداد سفارشات رد شده:</strong>
                                 <span>{{ rejected_count }}</span>
                             </div>
+                            {% if can_view_financials %}
                             <div class="d-flex justify-content-between">
                                 <strong>مجموع مبلغ:</strong>
                                 <span>{{ total_revenue|format_price }}</span>
                             </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

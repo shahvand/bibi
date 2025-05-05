@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
-from django.forms import modelformset_factory, inlineformset_factory
+from django.forms import modelformset_factory, inlineformset_factory, forms
 from django.http import HttpResponseForbidden, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
@@ -615,6 +615,7 @@ def delivery_report(request):
     return render(request, 'workflow/delivery_report.html', context)
 
 @login_required
+@role_required(['ACCOUNTANT', 'ADMIN'])
 def financial_report(request):
     """Report showing financial statistics"""
     # Get date filter parameters
@@ -657,6 +658,11 @@ def financial_report(request):
 @login_required
 def generate_invoice_pdf(request, pk):
     """Generate a PDF invoice for an order"""
+    # Check if user is accountant or admin
+    if request.user.role not in ['ACCOUNTANT', 'ADMIN']:
+        messages.error(request, 'شما دسترسی لازم برای مشاهده فاکتور را ندارید.')
+        return redirect('dashboard')
+        
     order = get_object_or_404(Order, pk=pk)
     
     # In a production environment, you would use a library like ReportLab or WeasyPrint

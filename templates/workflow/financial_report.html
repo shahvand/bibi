@@ -15,6 +15,7 @@
 {% endblock %}
 
 {% block content %}
+{% if user.role == 'ACCOUNTANT' or user.role == 'ADMIN' %}
 <div class="container-fluid mt-4">
     <div class="card shadow">
         <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
@@ -176,6 +177,16 @@
         </div>
     </div>
 </div>
+{% else %}
+<div class="container mt-5">
+    <div class="alert alert-danger">
+        <h4 class="alert-heading">دسترسی محدود شده!</h4>
+        <p>شما به این بخش دسترسی ندارید. فقط حسابداران مجاز به مشاهده اطلاعات مالی هستند.</p>
+        <hr>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary">بازگشت به داشبورد</a>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}

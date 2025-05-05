@@ -96,7 +96,9 @@
                                 <th>رد کردن</th>
                                 {% endif %}
                                 <th>واحد</th>
+                                {% if can_view_financials %}
                                 <th>قیمت واحد</th>
+                                {% endif %}
                                 <th>توضیحات</th>
                                 {% if can_add_remove %}
                                 <th>حذف</th>
@@ -158,7 +160,9 @@
                                     {% endif %}
                                     
                                     <td>{% if form.instance.product.unit_ref %}{{ form.instance.product.unit_ref.symbol }}{% else %}{{ form.instance.product.unit }}{% endif %}</td>
+                                    {% if can_view_financials %}
                                     <td>{{ form.instance.price_per_unit|format_price }}</td>
+                                    {% endif %}
                                     <td>
                                         <textarea name="{{ form.notes.html_name }}" 
                                                   id="{{ form.notes.auto_id }}" 
@@ -204,7 +208,9 @@
                                                id="{{ form.approved_quantity.auto_id }}" value="1">
                                     </td>
                                     <td class="product-unit">-</td>
+                                    {% if can_view_financials %}
                                     <td class="product-price">-</td>
+                                    {% endif %}
                                     <td>
                                         <textarea name="{{ form.notes.html_name }}" 
                                                   id="{{ form.notes.auto_id }}" 
@@ -271,7 +277,7 @@
             <input type="number" name="__PREFIX__-approved_quantity" 
                    id="id___PREFIX__-approved_quantity" 
                    class="form-control" min="0" step="any" value="1"
-                   oninvalid="this.setCustomValidity('لطفاً مقدار معتبر وارد کنید. تعداد رقم‌ها نباید بیشتر از 15 باشد.')"
+                   oninvalid="this.setCustomValidity('لطفاً مقدار معتبر وارد کنید.')"
                    oninput="this.setCustomValidity('')"
                    pattern="[0-9]*\.?[0-9]+"
                    title="لطفاً یک عدد صحیح یا اعشاری وارد کنید که تعداد ارقام آن از 15 بیشتر نباشد">
@@ -289,17 +295,19 @@
         {% endif %}
         
         <td class="product-unit">عدد</td>
+        {% if can_view_financials %}
         <td class="product-price">-</td>
+        {% endif %}
         <td>
             <textarea name="__PREFIX__-notes" 
-                     id="id___PREFIX__-notes" 
-                     class="form-control notes-field" rows="1" 
-                     style="height: auto; min-height: 38px;"
-                     placeholder="توضیحات تکمیلی..."></textarea>
+                      id="id___PREFIX__-notes" 
+                      class="form-control notes-field" rows="1"
+                      style="height: auto; min-height: 38px;"
+                      placeholder="توضیحات تکمیلی..."></textarea>
         </td>
         {% if can_add_remove %}
         <td>
-            <input type="checkbox" name="__PREFIX__-DELETE" id="id___PREFIX__-DELETE" style="display:none;">
+            <input type="checkbox" name="__PREFIX__-DELETE" id="id___PREFIX__-DELETE" class="delete-checkbox" style="display:none;">
             <button type="button" class="btn btn-sm btn-danger delete-row">
                 <i class="fas fa-trash"></i>
             </button>
@@ -418,7 +426,10 @@
                     if (productData) {
                         row.find('.product-code').text(productData.code);
                         row.find('.product-unit').text(productData.unit);
+                        
+                        {% if can_view_financials %}
                         row.find('.product-price').text(productData.price);
+                        {% endif %}
                         
                         // بروزرسانی برچسب واحد در کنار فیلدهای مقدار
                         row.find('.unit-label').text(productData.unit);
@@ -426,7 +437,10 @@
                 } else {
                     row.find('.product-code').text('-');
                     row.find('.product-unit').text('-');
+                    
+                    {% if can_view_financials %}
                     row.find('.product-price').text('-');
+                    {% endif %}
                 }
             });
             

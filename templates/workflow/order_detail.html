@@ -121,8 +121,10 @@
                             <th>مقدار درخواستی</th>
                             <th>مقدار تایید شده</th>
                             <th>واحد</th>
+                            {% if can_view_financials %}
                             <th>قیمت واحد (تومان)</th>
                             <th>قیمت کل (تومان)</th>
+                            {% endif %}
                             <th>یادداشت</th>
                         </tr>
                     </thead>
@@ -135,17 +137,20 @@
                             <td>{{ item.requested_quantity|clean_number }}</td>
                             <td>{% if item.approved_quantity %}{{ item.approved_quantity|clean_number }}{% else %}-{% endif %}</td>
                             <td>{% if item.product.unit_ref %}{{ item.product.unit_ref.symbol }}{% else %}{{ item.product.unit }}{% endif %}</td>
+                            {% if can_view_financials %}
                             <td>{{ item.price_per_unit|format_price }}</td>
                             <td>{{ item.total_price|format_price }}</td>
+                            {% endif %}
                             <td>{{ item.notes|default:"-" }}</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="9" class="text-center">هیچ کالایی در این سفارش موجود نیست.</td>
+                            <td colspan="{% if can_view_financials %}9{% else %}7{% endif %}" class="text-center">هیچ کالایی در این سفارش موجود نیست.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                     {% if order.items.all %}
+                    {% if can_view_financials %}
                     <tfoot class="table-light">
                         <tr>
                             <td colspan="7" class="text-start fw-bold">جمع کل:</td>
@@ -153,6 +158,7 @@
                             <td></td>
                         </tr>
                     </tfoot>
+                    {% endif %}
                     {% endif %}
                 </table>
             </div>
@@ -174,7 +180,9 @@
                                             <th>کالا</th>
                                             <th>مقدار درخواستی</th>
                                             <th>مقدار تایید شده</th>
+                                            {% if can_view_financials %}
                                             <th>قیمت واحد (تومان)</th>
+                                            {% endif %}
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -189,7 +197,9 @@
                                                        oninput="this.setCustomValidity('')"
                                                        title="لطفاً یک عدد صحیح یا اعشاری وارد کنید که از ۹۹۹,۹۹۹,۹۹۹,۹۹۹,۹۹۹ بیشتر نباشد">
                                             </td>
+                                            {% if can_view_financials %}
                                             <td>{{ item.price_per_unit|format_price }}</td>
+                                            {% endif %}
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -242,8 +252,8 @@
                 </div>
             {% endif %}
             
-            <!-- Accountant - Edit Prices -->
-            {% if user.role == 'ACCOUNTANT' or user.role == 'ADMIN' %}
+            <!-- Price Edit Button for Accountants -->
+            {% if can_view_financials %}
                 <div class="card mt-4">
                     <div class="card-header">
                         <h5>ویرایش قیمت‌ها</h5>
@@ -355,7 +365,9 @@
                         <th width="15%">مقدار درخواستی</th>
                         <th width="15%">مقدار تایید شده</th>
                         <th width="10%">واحد</th>
+                        {% if can_view_financials %}
                         <th width="15%">قیمت واحد (تومان)</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -364,18 +376,23 @@
                         <td>{{ forloop.counter }}</td>
                         <td>{{ item.product.title }}</td>
                         <td>{{ item.product.code }}</td>
-                        <td>{% if item.approved_quantity %}{{ item.approved_quantity|clean_number }}{% else %}{{ item.requested_quantity|clean_number }}{% endif %}</td>
+                        <td>{{ item.requested_quantity|clean_number }}</td>
+                        <td>{% if item.approved_quantity %}{{ item.approved_quantity|clean_number }}{% else %}-{% endif %}</td>
                         <td>{% if item.product.unit_ref %}{{ item.product.unit_ref.symbol }}{% else %}{{ item.product.unit }}{% endif %}</td>
+                        {% if can_view_financials %}
                         <td>{{ item.price_per_unit|format_price }}</td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>
+                {% if can_view_financials %}
                 <tfoot>
                     <tr>
                         <td colspan="6" class="text-start fw-bold">جمع کل:</td>
                         <td class="fw-bold">{{ order.total_price|format_price }}</td>
                     </tr>
                 </tfoot>
+                {% endif %}
             </table>
         </div>
         

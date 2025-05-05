@@ -79,6 +79,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'workflow.context_processors.session_info',
+                'workflow.context_processors.financial_access',
             ],
         },
     },

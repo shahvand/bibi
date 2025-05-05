@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap4',
     'django_filters',
-    'jalali_date',
+    'django_jalali',
+    'jdatetime',
     
     # Local apps
     'workflow.apps.WorkflowConfig',
@@ -183,23 +184,24 @@ MESSAGE_TAGS = {
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
-# Jalali Date Settings
-JALALI_DATE_DEFAULTS = {
-   'LIST_DISPLAY_AUTO_CONVERT': True,
-   'Strftime': {
-        'date': '%Y/%m/%d',
-        'datetime': '%H:%M:%S _ %Y/%m/%d',
-    },
-    'Static': {
-        'js': [
-            'admin/js/django_jalali.min.js',
-        ],
-        'css': {
-            'all': [
-              'admin/css/django_jalali.min.css',
-            ]
-        }
-    },
+# Django Jalali Settings
+JALALI_SETTINGS = {
+    # JavaScript static files for the admin Jalali date widget  
+    "ADMIN_JS_STATIC_FILES": [  
+        "admin/jquery.ui.datepicker.jalali/scripts/jquery-1.10.2.min.js",  
+        "admin/jquery.ui.datepicker.jalali/scripts/jquery.ui.core.js",  
+        "admin/jquery.ui.datepicker.jalali/scripts/jquery.ui.datepicker-cc.js",  
+        "admin/jquery.ui.datepicker.jalali/scripts/calendar.js",  
+        "admin/jquery.ui.datepicker.jalali/scripts/jquery.ui.datepicker-cc-fa.js",  
+        "admin/main.js",  
+    ],  
+    # CSS static files for the admin Jalali date widget  
+    "ADMIN_CSS_STATIC_FILES": {  
+        "all": [  
+            "admin/jquery.ui.datepicker.jalali/themes/base/jquery-ui.min.css",  
+            "admin/css/main.css",  
+        ]  
+    },  
 }
 
 # Set locale to Persian

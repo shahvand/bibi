@@ -10,5 +10,5 @@ pymemcache==4.0.0
 gunicorn==21.2.0
 python-dotenv==1.0.0
 django-filter==23.2
-jdatetime==4.1.1
-jalali-date==0.1.6 
+jdatetime==5.2.0
+django-jalali==7.4.0 
